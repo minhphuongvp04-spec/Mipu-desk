@@ -1,0 +1,865 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta name="robots" content="noindex,nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>TSMT Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>
+/* Layout: left folder rail (Outlook-style groups) + one focused page at a time; light canvas, white rounded blocks, Arcadyan green accent, one colour per project */
+:root{
+  --canvas:#F3F5F2; --card:#FFFFFF; --ink:#1B2420; --ink2:#3B4540; --muted:#6B7685; --line:#E4E8E2;
+  --brand:#7AB83E; --brand-deep:#4F8A1E; --brand-soft:#EEF6E4; --slate:#7C88A0;
+  --bad:#D64545; --bad-soft:#FCE8E8; --warn:#B87406; --warn-soft:#FDF2DD; --ok:#2E8B57; --ok-soft:#E3F3EA; --blue:#2F6FD6; --blue-soft:#E5EEFC;
+  --font:"Plus Jakarta Sans","Noto Sans TC","Microsoft JhengHei",system-ui,sans-serif;
+  --r-lg:20px; --r-md:14px; --r-sm:10px;
+}
+*{box-sizing:border-box;margin:0}
+html,body{background:var(--canvas)}
+body{font-family:var(--font);color:var(--ink);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;cursor:pointer}
+svg.i{width:19px;height:19px;flex:none;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.app{display:grid;grid-template-columns:264px minmax(0,1fr);min-height:100vh}
+/* ---------- sidebar ---------- */
+.side{background:var(--card);border-right:1px solid var(--line);padding:22px 16px 18px;display:flex;flex-direction:column;gap:18px;position:sticky;top:0;height:100vh;overflow-y:auto}
+.logo{display:flex;align-items:center;gap:11px;padding:0 6px}
+.logo .mark{width:38px;height:38px;border-radius:12px;background:var(--brand);display:grid;place-items:center;color:#fff;font-weight:800;font-size:18px}
+.logo b{font-size:16.5px;display:block;line-height:1.2} .logo small{color:var(--muted);font-size:12px}
+.nav{display:flex;flex-direction:column;gap:2px}
+.ni{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:var(--r-sm);color:var(--ink2);font-weight:500;width:100%;border:0;background:none;text-align:left}
+.ni:hover{background:var(--canvas)}
+.ni .lbl{flex:1;min-width:0}
+.ni .c{font-size:12px;background:var(--canvas);border-radius:8px;padding:0 7px;color:var(--muted);font-variant-numeric:tabular-nums}
+.ni .c.bad{background:var(--bad);color:#fff}
+.ni .chev{width:15px;height:15px;transition:transform .2s}
+.ni.open .chev{transform:rotate(90deg)}
+.ni.on{background:var(--brand-soft);color:var(--brand-deep);font-weight:700}
+.sub{display:flex;flex-direction:column;gap:1px;margin:2px 0 6px 21px;padding-left:12px;border-left:1.5px solid var(--line)}
+.si{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:8px;color:#4A544F;font-size:13.5px}
+.si:hover{background:var(--canvas)}
+.si i{width:9px;height:9px;border-radius:3px;flex:none}
+.si .c{margin-left:auto;font-size:12px;color:var(--muted)}
+.si.on{background:var(--canvas);font-weight:700;color:var(--ink)}
+.sep{font-size:12px;color:var(--muted);padding:10px 10px 2px}
+.sideFoot{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px;border-radius:var(--r-md);background:var(--canvas)}
+.av{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#9CCB6B,#4F8A1E);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+/* ---------- main ---------- */
+.main{padding:22px clamp(16px,2.4vw,32px) 48px;display:flex;flex-direction:column;gap:20px;min-width:0}
+.topbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.ham{display:none;width:40px;height:40px;border-radius:12px;background:var(--card);border:1px solid var(--line);place-items:center}
+.upd{color:var(--muted);font-size:13px}
+.langs{margin-left:auto;display:flex;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px}
+.langs button{border:0;background:none;padding:5px 11px;border-radius:9px;font-size:13px;color:var(--muted)}
+.langs button.on{background:var(--ink);color:#fff}
+.view{display:flex;flex-direction:column;gap:20px;animation:fade .25s ease}
+@keyframes fade{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
+.ph{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.ph h2{font-size:26px;font-weight:800;letter-spacing:-.01em;text-wrap:balance}
+.ph p{color:var(--muted)}
+.ph .right{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.crumb{display:flex;gap:6px;align-items:center;color:var(--muted);font-size:13px;flex-wrap:wrap}
+.crumb a:hover{color:var(--brand-deep)} .crumb b{color:var(--ink);font-weight:600}
+.crumb svg{width:13px;height:13px}
+.card{background:var(--card);border-radius:var(--r-lg);padding:20px;border:1px solid var(--line);min-width:0}
+.card h3{font-size:16px;font-weight:700;display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.card h3 .more{margin-left:auto;font-size:13px;color:var(--brand-deep);font-weight:600}
+.chip{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:3px 10px;font-size:12px;font-weight:600;white-space:nowrap}
+.chip.bad{background:var(--bad-soft);color:var(--bad)} .chip.warn{background:var(--warn-soft);color:var(--warn)} .chip.ok{background:var(--ok-soft);color:var(--ok)} .chip.gray{background:var(--canvas);color:var(--muted)} .chip.blue{background:var(--blue-soft);color:var(--blue)}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.muted{color:var(--muted)} .num{font-variant-numeric:tabular-nums}
+.btn{border-radius:12px;padding:9px 16px;font-weight:600;font-size:13.5px;display:inline-flex;gap:7px;align-items:center;border:1px solid var(--line);background:var(--card)}
+.btn:hover{border-color:var(--brand)}
+.btn.pri{background:var(--brand-deep);border-color:var(--brand-deep);color:#fff}
+.btn svg{width:16px;height:16px}
+:focus-visible{outline:2px solid var(--brand-deep);outline-offset:2px}
+.empty{display:flex;flex-direction:column;align-items:center;gap:10px;padding:28px 10px;color:var(--muted);text-align:center}
+.empty svg{width:120px;height:80px}
+/* hero */
+.hero{border-radius:24px;overflow:hidden;background:linear-gradient(120deg,#E9F4DC 0%,#F7FBF2 55%,#FFFFFF 100%);border:1px solid var(--line);display:grid;grid-template-columns:minmax(0,1fr) 360px;min-height:200px}
+.hero .txt{padding:28px 30px;display:flex;flex-direction:column;gap:10px;justify-content:center}
+.hero h1{font-size:30px;font-weight:800;letter-spacing:-.01em;line-height:1.15}
+.hero h1 em{font-style:normal;font-family:"Noto Sans TC",sans-serif;font-weight:700;color:var(--brand-deep);margin-left:8px}
+.hero p{color:#4A544F;max-width:58ch}
+.stats{display:flex;gap:10px;margin-top:6px;flex-wrap:wrap}
+.stat{background:rgba(255,255,255,.88);border:1px solid var(--line);border-radius:var(--r-md);padding:8px 14px;min-width:96px}
+.stat b{font-size:20px;display:block;line-height:1.2} .stat span{font-size:12px;color:var(--muted)}
+.hero .art svg{width:100%;height:100%;display:block}
+/* projects */
+.projects{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.proj{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s}
+.proj:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(40,60,30,.08)}
+.proj .cover{height:100px;display:block}
+.proj .cover svg{display:block;width:100%;height:100%}
+.proj .body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:9px}
+.proj .ttl{display:flex;align-items:center;gap:12px}
+.proj .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none}
+.proj .ic svg{width:19px;height:19px;stroke:#fff;fill:none;stroke-width:2}
+.proj .ttl b{font-size:16px;display:block;line-height:1.25} .proj .ttl span{font-size:13px;color:var(--muted)}
+.bar{height:6px;background:var(--canvas);border-radius:4px;overflow:hidden} .bar i{display:block;height:100%;border-radius:4px}
+.cols2{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:20px;min-width:0}
+/* rows */
+.tabs{display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap}
+.tabs button{padding:6px 12px;border-radius:9px;font-size:13px;font-weight:600;color:var(--muted);border:0;background:none}
+.tabs button.on{background:var(--ink);color:#fff}
+.oi{display:grid;grid-template-columns:4px minmax(0,1fr) auto;gap:14px;padding:14px 6px;border-top:1px solid var(--line);border-radius:10px}
+.oi:first-of-type{border-top:0}
+.oi:hover{background:var(--canvas)}
+.oi .stripe{border-radius:4px}
+.oi .t{font-weight:600;font-size:14.5px}
+.oi .l{font-size:13px;color:#4A544F;margin-top:3px}
+.oi .l .d{color:var(--muted);margin-right:6px}
+.oi .r{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.mine{background:linear-gradient(160deg,#2F4A22,#1E3317);color:#fff;border:0}
+.mine h3{color:#fff} .mine .muted{color:#BFD6AE}
+.ownerTag{font-size:11.5px;background:rgba(255,255,255,.14);padding:2px 8px;border-radius:999px;margin-left:auto;font-weight:600}
+.task{display:flex;gap:10px;align-items:flex-start;padding:9px 4px;border-top:1px solid rgba(255,255,255,.12);font-size:13.5px;border-radius:8px}
+.task:first-of-type{border-top:0}
+.task:hover{background:rgba(255,255,255,.06)}
+.task .dot{width:8px;height:8px;border-radius:50%;flex:none;margin-top:7px;background:#9CCB6B}
+.task .dot.bad{background:#FF8A80}.task .dot.warn{background:#FFD166}
+.up{display:flex;flex-direction:column;gap:10px}
+.up .day{display:grid;grid-template-columns:46px 1fr;gap:10px}
+.up .dd{background:var(--canvas);border-radius:12px;text-align:center;padding:5px 0;line-height:1.15}
+.up .dd b{font-size:17px;display:block} .up .dd span{font-size:11px;color:var(--muted)}
+.up .dd.today{background:var(--brand-deep);color:#fff} .up .dd.today span{color:#D8EBC5}
+.up .ev{font-size:13px;display:flex;flex-direction:column;gap:4px;justify-content:center;min-width:0}
+.up .ev div{display:flex;gap:7px;align-items:center}
+.up .ev i{width:7px;height:7px;border-radius:50%;flex:none}
+/* shipments list */
+.slist{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
+.sc{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px;display:flex;flex-direction:column;gap:12px;transition:transform .15s,box-shadow .15s}
+.sc:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(40,60,30,.08)}
+.sc .top{display:flex;gap:12px;align-items:center}
+.thumb{width:48px;height:48px;border-radius:14px;display:grid;place-items:center;flex:none}
+.thumb svg{width:22px;height:22px;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.sc b{font-size:15px;display:block;line-height:1.3}
+.sc .rt{font-size:12.5px;color:var(--muted)}
+.sc .prog{display:flex;flex-direction:column;gap:5px}
+.sc .prog .lab{display:flex;justify-content:space-between;font-size:12.5px}
+.sc .foot{display:flex;gap:6px;flex-wrap:wrap}
+/* detail */
+.dhead{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:18px;align-items:center}
+.dthumb{width:84px;height:84px;border-radius:20px;display:grid;place-items:center}
+.dthumb svg{width:38px;height:38px;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.dhead h2{font-size:24px;font-weight:800;letter-spacing:-.01em}
+.route{display:flex;gap:8px;align-items:center;color:#4A544F;margin-top:4px;flex-wrap:wrap}
+.route svg{width:34px;height:10px;flex:none}
+.stepper{display:grid;gap:0;overflow-x:auto;padding:4px 2px}
+.stp{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center;font-size:12.5px;color:var(--muted);position:relative;min-width:84px}
+.stp .dot{width:30px;height:30px;border-radius:50%;background:var(--canvas);border:2px solid var(--line);display:grid;place-items:center;z-index:1;font-weight:700;font-size:12px}
+.stp::before{content:"";position:absolute;top:15px;left:-50%;width:100%;height:2px;background:var(--line)}
+.stp:first-child::before{display:none}
+.stp.done .dot{background:var(--brand);border-color:var(--brand);color:#fff}
+.stp.done::before{background:var(--brand)}
+.stp.cur .dot{background:#fff;border-color:var(--brand-deep);color:var(--brand-deep);box-shadow:0 0 0 5px var(--brand-soft)}
+.stp.cur{color:var(--ink);font-weight:700}
+.stp small{display:block;font-weight:500;color:var(--muted);font-size:11.5px}
+.facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.fact{background:var(--canvas);border-radius:var(--r-md);padding:12px 14px;min-width:0}
+.fact span{display:block;font-size:12px;color:var(--muted)} .fact b{font-size:14.5px;overflow-wrap:anywhere}
+.fact b.late{color:var(--bad)}
+.blocker{display:flex;gap:12px;align-items:flex-start;background:var(--warn-soft);border-radius:var(--r-md);padding:12px 14px}
+.blocker .ic{width:32px;height:32px;border-radius:10px;background:#fff;display:grid;place-items:center;flex:none;color:var(--warn)}
+.blocker.done{background:var(--canvas)} .blocker.done .ic{color:var(--ok)}
+.tl{display:flex;flex-direction:column}
+.tli{display:grid;grid-template-columns:22px minmax(0,1fr);gap:12px;padding-bottom:16px;position:relative}
+.tli::before{content:"";position:absolute;left:10px;top:22px;bottom:0;width:2px;background:var(--line)}
+.tli:last-child{padding-bottom:0}.tli:last-child::before{display:none}
+.tli .dt{width:22px;height:22px;border-radius:50%;background:var(--brand-soft);display:grid;place-items:center}
+.tli .dt i{width:8px;height:8px;border-radius:50%;background:var(--brand-deep)}
+.tli .when{font-size:12px;color:var(--muted)} .tli .what{font-size:13.5px}
+.doc{display:flex;gap:12px;align-items:center;padding:10px 6px;border-top:1px solid var(--line);border-radius:10px}
+.doc:first-of-type{border-top:0}
+.doc:hover{background:var(--canvas)}
+.fi{width:36px;height:42px;border-radius:8px;display:grid;place-items:center;font-size:10.5px;font-weight:800;color:#fff;flex:none}
+.doc .nm{font-weight:600;font-size:13.5px} .doc .sz{font-size:12px;color:var(--muted)}
+.doc .open{margin-left:auto}
+.ask{display:flex;gap:10px;align-items:center;border:1.5px dashed var(--line);border-radius:var(--r-md);padding:12px 14px;color:var(--muted)}
+/* production */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:16px 18px;display:flex;gap:14px;align-items:center}
+.kpi .kic{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;flex:none}
+.kpi .kic svg{width:21px;height:21px;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.kpi b{font-size:22px;display:block;line-height:1.2} .kpi span{font-size:12.5px;color:var(--muted)}
+.g2{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:20px}
+.legend{display:flex;gap:14px;font-size:12.5px;color:var(--muted);flex-wrap:wrap;align-items:center}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.hb{display:grid;grid-template-columns:110px minmax(0,1fr) 64px;gap:10px;align-items:center;font-size:13px;padding:5px 0}
+.hb .tr{height:10px;background:var(--canvas);border-radius:6px;overflow:hidden} .hb .tr i{display:block;height:100%;border-radius:6px}
+.hb .v{text-align:right;font-weight:600}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{padding:7px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:600;font-size:13px;display:flex;gap:7px;align-items:center}
+.seg button.on{border-color:var(--brand-deep);background:var(--brand-soft);color:var(--brand-deep)}
+.seg i{width:8px;height:8px;border-radius:50%}
+.stage{display:grid;grid-template-columns:140px minmax(0,1fr) 44px;gap:10px;align-items:center;font-size:13px;padding:3px 0}
+.stage .tr{height:8px;background:var(--canvas);border-radius:6px;overflow:hidden}.stage .tr i{display:block;height:100%;border-radius:6px}
+select.sel{font:inherit;font-size:13px;border:1px solid var(--line);border-radius:10px;padding:5px 10px;background:var(--card)}
+.tw{overflow-x:auto;min-width:0}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th{font-weight:600;font-size:12px;color:var(--muted);text-align:left;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+tr.secrow td{background:var(--canvas);font-weight:700}
+tr.hold td{background:var(--warn-soft)}
+td.late,.late{color:var(--bad);font-weight:600}
+.grid{font-size:12px}
+.grid th,.grid td{padding:5px 7px;text-align:right;white-space:nowrap}
+.grid th.sl,.grid td.sl{position:sticky;left:0;background:var(--card);text-align:left;z-index:1;min-width:170px}
+.grid td.off{background:var(--canvas);color:var(--muted)}
+.grid .today{box-shadow:inset 2px 0 0 var(--brand-deep),inset -2px 0 0 var(--brand-deep)}
+.grid tr.pl td{color:var(--muted)} .grid td.under{color:var(--bad);font-weight:600} .grid td.over{color:var(--ok);font-weight:600}
+.grid .hl{font-size:10px;color:var(--warn);font-weight:600}
+.sugg{border-radius:var(--r-md);padding:12px 16px;display:flex;flex-direction:column;gap:5px;background:var(--warn-soft)}
+.sugg.ok{background:var(--ok-soft)}
+/* calendar */
+.calg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.calg .wd{font-size:12px;color:var(--muted);text-align:center;padding-bottom:4px}
+.calg .cd{background:var(--card);border:1px solid var(--line);border-radius:12px;min-height:104px;padding:6px 7px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.calg .cd.out{background:transparent;border-color:transparent}
+.calg .cd.td{border-color:var(--brand-deep);box-shadow:0 0 0 2px var(--brand-soft)}
+.calg .cd.off{background:#F8F9F7}
+.calg .cd b{font-size:12.5px}
+.calg .ev{font-size:11.5px;border-radius:6px;padding:1px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* bottom nav (mobile) */
+.bnav{display:none}
+.scrim{display:none}
+@media (max-width:1100px){.cols2{grid-template-columns:minmax(0,1fr)} .hero{grid-template-columns:minmax(0,1fr) 260px}}
+@media (max-width:900px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:fixed;left:0;top:0;bottom:0;width:286px;z-index:40;transform:translateX(-100%);transition:transform .25s;box-shadow:0 0 40px rgba(0,0,0,.15)}
+  body.menu .side{transform:none}
+  body.menu .scrim{display:block;position:fixed;inset:0;background:rgba(20,30,20,.35);z-index:30}
+  .ham{display:grid}
+  .main{padding:14px max(16px,env(safe-area-inset-left)) 96px}
+  .hero{grid-template-columns:minmax(0,1fr)} .hero .art{height:130px}
+  .hero h1{font-size:23px}
+  .g2,.dhead{grid-template-columns:minmax(0,1fr)}
+  .dhead .dthumb{display:none}
+  .bnav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:8px 4px calc(10px + env(safe-area-inset-bottom));z-index:20}
+  .bnav a{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;color:var(--muted)}
+  .bnav a.on{color:var(--brand-deep);font-weight:700}
+  .calg .cd{min-height:64px} .calg .ev{font-size:0;height:6px;padding:0}
+  .slist{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-open" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 9h10M7 13h6"/></symbol>
+    <symbol id="i-truck" viewBox="0 0 24 24"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></symbol>
+    <symbol id="i-box" viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5l8 4.5 8-4.5M12 12v9"/></symbol>
+    <symbol id="i-factory" viewBox="0 0 24 24"><path d="M3 20V10l5 3V10l5 3V6h3l1 14z"/><path d="M3 20h18"/></symbol>
+    <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></symbol>
+    <symbol id="i-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
+    <symbol id="i-right" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+    <symbol id="i-left" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17v.5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></symbol>
+    <symbol id="i-wifi" viewBox="0 0 24 24"><path d="M4 10a12 12 0 0 1 16 0M7 13.5a7.5 7.5 0 0 1 10 0M10 17a3 3 0 0 1 4 0"/></symbol>
+    <symbol id="i-chip" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></symbol>
+    <symbol id="i-battery" viewBox="0 0 24 24"><rect x="7" y="4" width="10" height="17" rx="2"/><path d="M10 2h4M12.5 8l-2 4h3l-2 4"/></symbol>
+    <symbol id="i-flask" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/><path d="M7 15h10"/></symbol>
+    <symbol id="i-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1.2l2-1.6-2-3.4-2.4 1a7 7 0 0 0-2-1.2L14 3h-4l-.5 2.6a7 7 0 0 0-2 1.2l-2.4-1-2 3.4 2 1.6A7 7 0 0 0 5 12a7 7 0 0 0 .1 1.2l-2 1.6 2 3.4 2.4-1a7 7 0 0 0 2 1.2L10 21h4l.5-2.6a7 7 0 0 0 2-1.2l2.4 1 2-3.4-2-1.6A7 7 0 0 0 19 12z"/></symbol>
+    <symbol id="i-msg" viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></symbol>
+    <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 34 10"><path d="M0 5h30M25 1l5 4-5 4"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <aside class="side" id="side"></aside>
+  <div class="scrim" id="scrim"></div>
+  <main class="main">
+    <div class="topbar">
+      <button class="ham" id="ham" aria-label="Menu"><svg class="i"><use href="#i-menu"/></svg></button>
+      <span class="upd" id="upd"></span>
+      <div class="langs" id="langs"></div>
+    </div>
+    <div id="view" class="view"></div>
+  </main>
+</div>
+<nav class="bnav" id="bnav"></nav>
+
+<style>
+#gate{position:fixed;inset:0;z-index:9999;background:#F3F5F2;display:flex;align-items:center;justify-content:center;padding:16px;font-family:'Plus Jakarta Sans','Noto Sans TC',system-ui,sans-serif}
+#gate form{background:#fff;border-radius:20px;padding:34px 28px 26px;width:100%;max-width:370px;box-shadow:0 12px 40px rgba(40,70,20,.10)}
+#gate .gmark{width:44px;height:44px;border-radius:12px;background:#7AB83E;display:grid;place-items:center;margin-bottom:18px}
+#gate h1{font-size:21px;margin:0 0 4px;color:#1d2a14;letter-spacing:-.01em}
+#gate p{margin:0 0 20px;color:#6b7563;font-size:13.5px;line-height:1.5}
+#gate input[type=password]{width:100%;box-sizing:border-box;font:inherit;font-size:15px;padding:12px 14px;border:1.5px solid #dfe5d8;border-radius:12px;outline:none}
+#gate input[type=password]:focus{border-color:#7AB83E;box-shadow:0 0 0 3px #EEF6E4}
+#gate label{display:flex;gap:8px;align-items:center;margin:14px 0 18px;font-size:13px;color:#4c5645;cursor:pointer}
+#gate button{width:100%;font:inherit;font-weight:700;font-size:15px;padding:12px;border:0;border-radius:12px;background:#4F8A1E;color:#fff;cursor:pointer}
+#gate button:disabled{opacity:.6;cursor:wait}
+#gate button:focus-visible{outline:3px solid #b9dc93;outline-offset:2px}
+#gate .gerr{min-height:20px;margin-top:12px;color:#D64545;font-size:13px}
+</style>
+<div id="gate" style="display:none">
+  <form id="gateF" autocomplete="on">
+    <div class="gmark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></div>
+    <h1>TSMT Project Desk</h1>
+    <p>Enter the access password.<br>请输入访问密码。</p>
+    <input type="text" name="username" value="tsmt" autocomplete="username" style="display:none" aria-hidden="true">
+    <input type="password" id="gatePw" autocomplete="current-password" aria-label="Password" required>
+    <label><input type="checkbox" id="gateRem"> Remember on this device / 在此设备上记住</label>
+    <button id="gateBtn">Unlock / 解锁</button>
+    <div class="gerr" id="gateErr" role="alert"></div>
+  </form>
+</div>
+<script>
+(()=>{
+const META={"salt":"CixIOfU8Zkioe1mWVxT9NA==","iter":310000,"v":"20261120144048"};
+const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+const tob64=u=>{let s='';u.forEach(b=>s+=String.fromCharCode(b));return btoa(s)};
+const $=id=>document.getElementById(id);
+let K=null;
+async function keysFrom(bits){
+  const enc=await crypto.subtle.importKey('raw',bits.slice(0,32),'AES-CBC',false,['decrypt']);
+  const mac=await crypto.subtle.importKey('raw',bits.slice(32,64),{name:'HMAC',hash:'SHA-256'},false,['verify']);
+  return {enc,mac};
+}
+async function derive(pw){
+  const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pw),'PBKDF2',false,['deriveBits']);
+  return new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',salt:b64(META.salt),iterations:META.iter,hash:'SHA-256'},k,512));
+}
+async function dec(buf,k){
+  const u=new Uint8Array(buf);if(u.length<64)throw new Error('short');
+  const body=u.slice(0,u.length-32),tag=u.slice(u.length-32);
+  if(!await crypto.subtle.verify('HMAC',k.mac,tag,body))throw new Error('badkey');
+  return new Uint8Array(await crypto.subtle.decrypt({name:'AES-CBC',iv:body.slice(0,16)},k.enc,body.slice(16)));
+}
+async function get(p){const r=await fetch(p+'?v='+META.v,{cache:'no-cache'});if(!r.ok)throw new Error('net');return r.arrayBuffer()}
+function forget(){try{sessionStorage.removeItem('tsmt_k');localStorage.removeItem('tsmt_k')}catch(e){}}
+async function unlock(bits,remember){
+  const k=await keysFrom(bits);
+  const data=await dec(await get('data.enc'),k);
+  K=k;
+  const s=tob64(bits)+'|'+META.salt;
+  try{sessionStorage.setItem('tsmt_k',s);if(remember)localStorage.setItem('tsmt_k',s)}catch(e){}
+  (new Function(new TextDecoder().decode(data)))();
+  $('gate').remove();
+  window.TSMT_APP();
+}
+function saved(){
+  let s=null;try{s=sessionStorage.getItem('tsmt_k')||localStorage.getItem('tsmt_k')}catch(e){}
+  if(!s)return null;const p=s.split('|');return p[1]===META.salt?b64(p[0]):null;
+}
+function showForm(msg){$('gate').style.display='flex';$('gateErr').textContent=msg||'';$('gatePw').focus()}
+async function start(){
+  if(/[?&]lock=1/.test(location.search)){forget();history.replaceState(null,'',location.pathname+location.hash)}
+  if(!window.crypto||!crypto.subtle){showForm('This browser cannot open the site. Use Chrome or Edge over https.');return}
+  const b=saved();
+  if(b){try{await unlock(b,false);return}catch(e){if(e.message==='net'){showForm('Cannot reach the site. Check the connection and reload.');return}forget()}}
+  showForm();
+  $('gateF').addEventListener('submit',async ev=>{
+    ev.preventDefault();const btn=$('gateBtn');btn.disabled=true;$('gateErr').textContent='';
+    try{await unlock(await derive($('gatePw').value),$('gateRem').checked)}
+    catch(e){btn.disabled=false;$('gatePw').select();$('gateErr').textContent=e.message==='net'?'Cannot reach the site. Check the connection and reload.':'Wrong password. 密码错误。'}
+  });
+}
+document.addEventListener('click',async e=>{
+  const a=e.target.closest&&e.target.closest('a.doc');if(!a||!K)return;
+  e.preventDefault();
+  const href=a.getAttribute('href');
+  try{
+    const bytes=await dec(await get(href+'.enc'),K);
+    const u=URL.createObjectURL(new Blob([bytes]));
+    const l=document.createElement('a');l.href=u;l.download=decodeURIComponent(href.split('/').pop());
+    document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),10000);
+  }catch(err){alert('Could not open this file.')}
+},true);
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start);else start();
+})();
+</script>
+
+<script>
+window.TSMT_APP=()=>{
+const D=window.TSMT_DATA||{issues:[],shipments:[],outbound:[],qa:[],plans:[],docs:[],todos:[],projects:[],settings:{}};
+/* ---------------- i18n ---------------- */
+const L={
+en:{nav_open:'Open items',nav_ship:'Shipments',nav_out:'Customer shipments',nav_prod:'Production',nav_cal:'Calendar',nav_docs:'Documents',nav_report:'Monthly summary',nav_me:'My tasks today',nav_update:'Update data',only_you:'Only you see this',
+sub_all:'All',sub_overdue:'Overdue',sub_transit:'In transit',sub_material:'Materials to TSMT',sub_equipment:'Machines / fixtures',sub_sample:'Samples',sub_return:'Returns',sub_done:'Completed',sub_overview:'Overview & charts',sub_qa:'QA reports',sub_plan:'Production plan',sub_minutes:'Meeting minutes',sub_dpr:'DPR',sub_qareport:'QA reports',sub_po:'PO / Invoice',sub_other:'Other',
+role_owner:'Updates the data',role_viewer:'Viewer',updated:'Data updated {d}',
+gm:'Good morning',ga:'Good afternoon',ge:'Good evening',
+hero_txt:'{d}. {o} overdue and {w} due in the next 7 days. Next TSMT weekly meeting: {m}.',
+st_open:'Open',st_overdue:'Overdue',st_moving:'Lots moving',
+pc_open:'{n} open',pc_overdue:'{n} overdue',pc_packed:'Packed {a} / {b}',pc_noupd:'No updates yet',
+open_title:'Open items',sort_due:'Sorted by due date',tab_all:'All',tab_overdue:'Overdue',tab_week:'Next 7 days',tab_nodue:'No due date',
+due_today:'Due today',due_in:'Due {d}',overdue_n:'Overdue {n} days',no_due:'No due date',
+mine:'My tasks today',coming:'Coming up',open_cal:'Open calendar',nothing:'Nothing here right now.',all_clear:'Nothing needs you today.',
+f_owners:'Owners',f_due:'Due',f_opened:'Opened',f_status:'Status',f_prio:'Priority',f_cat:'Category',f_lot:'Lot',f_closed:'Closed',f_reason:'Close reason',
+s_open:'Open',s_progress:'In progress',s_closed:'Closed',p_high:'High',p_med:'Medium',p_low:'Low',
+c_shipment:'Shipment',c_material:'Material',c_production:'Production',c_quality:'Quality',c_equipment:'Equipment',c_docs:'Documents',c_other:'Other',
+log:'Update history',back:'Back',
+k_material:'Material',k_equipment:'Machine / fixture',k_sample:'Sample',k_return:'Return',k_fg:'Finished goods',k_other:'Other',
+st_po:'PO created',st_ready:'Goods ready',st_docs:'Invoice / PKL',st_booking:'Booking',st_shipped:'Shipped (ETD)',st_arrived:'Arrived (ETA)',st_customs:'Customs cleared',st_delivered:'Delivered',st_none:'Waiting for PO',
+ob_production:'In production',ob_fg:'FG ready',ob_packing:'Packed',ob_booking:'Booked',ob_shipped:'Shipped',ob_delivered:'Customer received',
+b_docs:'Documents',b_confirm:'Waiting confirmation',b_approval:'PR / PO approval',b_license:'License / permit',b_customs:'Customs',b_payment:'Cost / payment',b_other:'Other',
+lot_info:'Shipment details',f_qty:'Quantity',f_terms:'Terms',f_cost:'Cost borne by',f_owner:'Owner',f_po:'PO',f_inv:'Invoice',f_etd:'ETD plan / actual',f_eta:'ETA plan / actual',f_ready:'Ready at ARC',f_process:'Used in',f_mode:'Mode',f_dest:'Destination',f_shipplan:'Planned ship',f_shipact:'Actual ship',f_issue:'Issue',
+not_set:'Not set',open_days:'open {n} days',resolved:'Resolved',next_step:'Next step',step_of:'Step {a} of {b}',late_d:'Late {n} days',blockers_n:'{n} blocker(s)',
+docs_att:'Attached documents',viewers_see:'Viewers will see',ask_ph:'Ask Mipu about this…',ask_note:'Questions and comments come in a later phase.',
+p_lot:'Choose a lot',k_packed:'Packed (QA {d})',k_worst:'Lowest 1A yield · {s}',k_hold:'On hold',k_finish:'Forecast finish',
+ch_pa:'Plan vs actual',ch_daily:'Per day',lg_plan:'Plan',lg_act:'Actual',no_data:'no data yet',ch_stage:'Lot progress by stage',packed:'packed',ch_yield:'1A yield by station · QA {d}',warn_at:'Warning below 95%',yield_note:'Bars start at 0%. Stations below 95% turn orange.',ch_status:'Shipments by status',
+g_nopo:'Waiting for PO',g_prep:'PO / preparing',g_transit:'In transit',g_done:'Received',
+qa_report:'QA report',qa_hist:'Report history',qa_shift:'Shift',qa_by:'Reported by',th_part:'Part no.',th_station:'Station',th_input:'Input',th_p1:'1A pass',th_f1:'1A fail',th_p2:'2A pass',th_f2:'2A fail',th_y1:'1A yield',th_y2:'2A yield',th_rt:'Retest',th_rw:'Rework',th_ntf:'NTF',th_note:'Fail details',qa_none:'No QA reports yet.',
+vs_plan:'Against the plan',th_stage:'DPR stage',th_qain:'QA input (cum.)',th_dpract:'DPR actual (cum.)',th_plancum:'Plan (cum.)',th_lotpct:'% of lot',
+pl_ms:'Ship milestones',pl_by:'{q} pcs by {d}',pl_reach:'reached {d}',pl_noreach:'not reached',pl_short:'short {n}',pl_gap:'How to close the gap',pl_ok:'On track for every ship milestone.',
+pl_cap:'Raise {st} from {a} to {b} pcs/day (+{p}%) with more manpower or overtime.',pl_days:'Add {n} extra working day(s) before {d}. Non-working days available: {m}.',pl_delay:'Or move this shipment to {d}, the forecast date.',
+th_target:'Target',th_actual:'Actual',th_done:'Done',th_today:'Today',th_cap:'Per day',th_finish:'Forecast finish',grid_help:'Forecast rows are recalculated from today using what is left, daily capacity, the feeding stage and non-working days.',fc:'Forecast',tsmt_plan:'TSMT plan',actual:'Actual',all_dates:'All dates',around:'Around today',
+cal_title:'Calendar',ev_etd:'ETD',ev_eta:'ETA',ev_ready:'Ready at ARC',ev_ship:'Ship to customer',ev_due:'Due',ev_ms:'Ship milestone',ev_hol:'Non-working',ev_meet:'TSMT weekly meeting',ev_event:'Event',
+docs_title:'Documents',open_file:'Open',docs_none:'No documents in this folder yet.',
+r_month:'Month',r_closed:'Closed this month',r_opened:'Opened this month',r_still:'Still open',r_avg:'Average days to close',r_ships:'Shipments completed',r_days:'Days taken',r_age:'Age (days)',r_none:'None.',r_transit:'Transit days',r_delay:'ETA delay',
+me_confirm:'Confirm today',me_due:'Due and overdue',me_prepare:'Prepare',
+a_etdPassed:'ETD {d} passed. Confirm the lot has left.',a_etdSoon:'ETD {d}. Confirm booking and departure.',a_etaPassed:'ETA {d} passed. Confirm arrival.',a_etaSoon:'ETA {d}. Confirm arrival and customs.',a_stale:'No update for {n} days',a_blocker:'Blocker · {g}: {x}',a_readyPassed:'Ready date {d} passed. Check with ARC.',a_readySoon:'Ready at ARC on {d}. Tell TSMT.',
+a_obPassed:'Planned ship date {d} passed. Confirm status.',a_obSoon:'Customer shipment on {d}. Confirm readiness.',a_overdue:'Overdue since {d}',a_dueSoon:'Due {d}',a_qaY:'No QA report for {d}',a_dprShort:'Forecast {n} pcs short of {q} by {d}',a_meeting:'Weekly meeting {d}: {n} open items, {m} not updated since last meeting',
+up_title:'Update data',up_txt:'Send Claude the new information: a QA photo, the DPR Excel from Sabesh, the meeting minutes after each meeting, or a short note. Claude updates the data file and this site shows it the next time it is opened.',up_last:'Last update',up_counts:'Records in the site',
+wd0:'Sun',wd1:'Mon',wd2:'Tue',wd3:'Wed',wd4:'Thu',wd5:'Fri',wd6:'Sat'},
+vi:{nav_open:'Hạng mục đang open',nav_ship:'Shipment',nav_out:'Xuất hàng cho khách',nav_prod:'Sản xuất',nav_cal:'Lịch',nav_docs:'Tài liệu',nav_report:'Tổng kết tháng',nav_me:'Việc của tôi hôm nay',nav_update:'Cập nhật dữ liệu',only_you:'Chỉ bạn thấy',
+sub_all:'Tất cả',sub_overdue:'Quá hạn',sub_transit:'Đang vận chuyển',sub_material:'Nguyên liệu → TSMT',sub_equipment:'Máy móc / fixture',sub_sample:'Mẫu',sub_return:'Hàng trả về',sub_done:'Đã hoàn thành',sub_overview:'Tổng quan & biểu đồ',sub_qa:'Báo cáo QA',sub_plan:'Kế hoạch sản xuất',sub_minutes:'Biên bản họp',sub_dpr:'DPR',sub_qareport:'Báo cáo QA',sub_po:'PO / Invoice',sub_other:'Khác',
+role_owner:'Người cập nhật',role_viewer:'Người xem',updated:'Dữ liệu cập nhật {d}',
+gm:'Good morning',ga:'Good afternoon',ge:'Good evening',
+hero_txt:'{d}. Có {o} việc quá hạn và {w} việc đến hạn trong 7 ngày tới. Họp tuần TSMT: {m}.',
+st_open:'Đang open',st_overdue:'Quá hạn',st_moving:'Lô đang chạy',
+pc_open:'{n} open',pc_overdue:'{n} quá hạn',pc_packed:'Đã đóng gói {a} / {b}',pc_noupd:'Chưa có cập nhật',
+open_title:'Hạng mục đang open',sort_due:'Sắp xếp theo hạn',tab_all:'Tất cả',tab_overdue:'Quá hạn',tab_week:'7 ngày tới',tab_nodue:'Không có hạn',
+due_today:'Hạn hôm nay',due_in:'Hạn {d}',overdue_n:'Quá hạn {n} ngày',no_due:'Không có hạn',
+mine:'Việc của tôi hôm nay',coming:'Sắp tới',open_cal:'Mở lịch',nothing:'Hiện chưa có mục nào.',all_clear:'Hôm nay không có việc cần xử lý.',
+f_owners:'Phụ trách',f_due:'Hạn',f_opened:'Ngày mở',f_status:'Trạng thái',f_prio:'Ưu tiên',f_cat:'Loại',f_lot:'Lô',f_closed:'Ngày đóng',f_reason:'Lý do đóng',
+s_open:'Mới mở',s_progress:'Đang xử lý',s_closed:'Đã đóng',p_high:'Cao',p_med:'Trung bình',p_low:'Thấp',
+c_shipment:'Shipment',c_material:'Nguyên liệu',c_production:'Sản xuất',c_quality:'Chất lượng',c_equipment:'Thiết bị',c_docs:'Giấy tờ',c_other:'Khác',
+log:'Nhật ký cập nhật',back:'Quay lại',
+k_material:'Nguyên liệu',k_equipment:'Máy móc / fixture',k_sample:'Mẫu',k_return:'Hàng trả về',k_fg:'Thành phẩm',k_other:'Khác',
+st_po:'PO đã tạo',st_ready:'Hàng sẵn sàng',st_docs:'Invoice / PKL',st_booking:'Booking',st_shipped:'Đã xuất (ETD)',st_arrived:'Đã tới (ETA)',st_customs:'Thông quan',st_delivered:'Đã nhận',st_none:'Chờ PO',
+ob_production:'Đang sản xuất',ob_fg:'Có thành phẩm',ob_packing:'Đã đóng gói',ob_booking:'Đã booking',ob_shipped:'Đã ship',ob_delivered:'Khách đã nhận',
+b_docs:'Chuẩn bị giấy tờ',b_confirm:'Chờ xác nhận',b_approval:'Duyệt PR / PO',b_license:'Giấy phép',b_customs:'Hải quan',b_payment:'Chi phí / thanh toán',b_other:'Khác',
+lot_info:'Thông tin lô hàng',f_qty:'Số lượng',f_terms:'Hình thức',f_cost:'Người chịu chi phí',f_owner:'Phụ trách',f_po:'Số PO',f_inv:'Invoice',f_etd:'ETD dự kiến / thực tế',f_eta:'ETA dự kiến / thực tế',f_ready:'Sẵn sàng tại ARC',f_process:'Dùng cho công đoạn',f_mode:'Phương thức',f_dest:'Nơi đến',f_shipplan:'Ngày ship dự kiến',f_shipact:'Ngày ship thực tế',f_issue:'Vấn đề',
+not_set:'Chưa có',open_days:'mở {n} ngày',resolved:'Đã xử lý',next_step:'Bước tiếp',step_of:'Bước {a}/{b}',late_d:'Trễ {n} ngày',blockers_n:'{n} vướng mắc',
+docs_att:'Tài liệu đính kèm',viewers_see:'Người xem sẽ thấy',ask_ph:'Hỏi Mipu về mục này…',ask_note:'Hỏi đáp và comment sẽ làm ở giai đoạn sau.',
+p_lot:'Chọn lô',k_packed:'Đã đóng gói (QA {d})',k_worst:'Yield 1A thấp nhất · {s}',k_hold:'Đang hold',k_finish:'Dự kiến xong cả lô',
+ch_pa:'Kế hoạch so với thực tế',ch_daily:'Theo ngày',lg_plan:'Kế hoạch',lg_act:'Thực tế',no_data:'chưa có số liệu',ch_stage:'Tiến độ lô theo công đoạn',packed:'đã đóng gói',ch_yield:'Yield 1A theo trạm · QA {d}',warn_at:'Cảnh báo dưới 95%',yield_note:'Thanh bắt đầu từ 0%. Trạm dưới 95% chuyển màu cam.',ch_status:'Lô hàng theo trạng thái',
+g_nopo:'Chờ PO',g_prep:'Có PO / đang chuẩn bị',g_transit:'Đang vận chuyển',g_done:'Đã nhận',
+qa_report:'Báo cáo QA',qa_hist:'Lịch sử báo cáo',qa_shift:'Ca',qa_by:'Người báo cáo',th_part:'Mã part',th_station:'Trạm',th_input:'Đầu vào',th_p1:'1A đạt',th_f1:'1A lỗi',th_p2:'2A đạt',th_f2:'2A lỗi',th_y1:'Yield 1A',th_y2:'Yield 2A',th_rt:'Test lại',th_rw:'Rework',th_ntf:'NTF',th_note:'Chi tiết lỗi',qa_none:'Chưa có báo cáo QA.',
+vs_plan:'So với kế hoạch',th_stage:'Công đoạn DPR',th_qain:'QA đầu vào (lũy kế)',th_dpract:'DPR thực tế (lũy kế)',th_plancum:'Kế hoạch (lũy kế)',th_lotpct:'% của lô',
+pl_ms:'Mốc ship',pl_by:'{q} pcs trước {d}',pl_reach:'đạt ngày {d}',pl_noreach:'không đạt',pl_short:'thiếu {n}',pl_gap:'Cách bù phần thiếu',pl_ok:'Kịp tất cả mốc ship.',
+pl_cap:'Tăng {st} từ {a} lên {b} pcs/ngày (+{p}%) bằng thêm người hoặc tăng ca.',pl_days:'Thêm {n} ngày làm việc trước {d}. Ngày nghỉ có thể dùng: {m}.',pl_delay:'Hoặc lùi lô ship này sang {d}, ngày dự báo.',
+th_target:'Mục tiêu',th_actual:'Thực tế',th_done:'Hoàn thành',th_today:'Hôm nay',th_cap:'Mỗi ngày',th_finish:'Dự kiến xong',grid_help:'Hàng dự báo được tính lại từ hôm nay theo số còn lại, năng suất mỗi ngày, công đoạn trước và ngày nghỉ.',fc:'Dự báo',tsmt_plan:'Kế hoạch TSMT',actual:'Thực tế',all_dates:'Tất cả ngày',around:'Quanh hôm nay',
+cal_title:'Lịch',ev_etd:'ETD',ev_eta:'ETA',ev_ready:'Sẵn sàng tại ARC',ev_ship:'Ship cho khách',ev_due:'Hạn',ev_ms:'Mốc ship',ev_hol:'Ngày nghỉ',ev_meet:'Họp tuần TSMT',ev_event:'Sự kiện',
+docs_title:'Tài liệu',open_file:'Mở',docs_none:'Thư mục này chưa có tài liệu.',
+r_month:'Tháng',r_closed:'Đã đóng trong tháng',r_opened:'Mở mới trong tháng',r_still:'Vẫn đang open',r_avg:'Số ngày trung bình để đóng',r_ships:'Lô hàng đã hoàn thành',r_days:'Số ngày',r_age:'Đã mở (ngày)',r_none:'Không có.',r_transit:'Ngày vận chuyển',r_delay:'Trễ ETA',
+me_confirm:'Cần xác nhận hôm nay',me_due:'Đến hạn và quá hạn',me_prepare:'Cần chuẩn bị',
+a_etdPassed:'ETD {d} đã qua. Xác nhận lô đã đi chưa.',a_etdSoon:'ETD {d}. Xác nhận booking và ngày đi.',a_etaPassed:'ETA {d} đã qua. Xác nhận hàng đã tới.',a_etaSoon:'ETA {d}. Xác nhận hàng tới và thông quan.',a_stale:'{n} ngày chưa cập nhật',a_blocker:'Vướng mắc · {g}: {x}',a_readyPassed:'Ngày sẵn sàng {d} đã qua. Hỏi lại ARC.',a_readySoon:'ARC sẵn sàng ngày {d}. Báo TSMT.',
+a_obPassed:'Ngày ship dự kiến {d} đã qua. Xác nhận tình trạng.',a_obSoon:'Ship cho khách ngày {d}. Xác nhận đã sẵn sàng.',a_overdue:'Quá hạn từ {d}',a_dueSoon:'Hạn {d}',a_qaY:'Chưa có báo cáo QA ngày {d}',a_dprShort:'Dự báo thiếu {n} pcs so với {q} trước {d}',a_meeting:'Họp tuần {d}: {n} mục open, {m} mục chưa cập nhật từ lần họp trước',
+up_title:'Cập nhật dữ liệu',up_txt:'Gửi Claude thông tin mới: ảnh báo cáo QA, file DPR của Sabesh, biên bản sau mỗi buổi họp, hoặc một ghi chú ngắn. Claude cập nhật file dữ liệu và web sẽ hiển thị ở lần mở tiếp theo.',up_last:'Lần cập nhật gần nhất',up_counts:'Số mục trên web',
+wd0:'CN',wd1:'T2',wd2:'T3',wd3:'T4',wd4:'T5',wd5:'T6',wd6:'T7'},
+zh:{nav_open:'未結項目',nav_ship:'出貨追蹤',nav_out:'客戶出貨',nav_prod:'生產',nav_cal:'行事曆',nav_docs:'文件',nav_report:'月度總結',nav_me:'我的今日待辦',nav_update:'更新資料',only_you:'僅您可見',
+sub_all:'全部',sub_overdue:'逾期',sub_transit:'運輸中',sub_material:'物料 → TSMT',sub_equipment:'機台 / 治具',sub_sample:'樣品',sub_return:'退貨',sub_done:'已完成',sub_overview:'總覽與圖表',sub_qa:'品質報告',sub_plan:'生產計劃',sub_minutes:'會議紀錄',sub_dpr:'DPR',sub_qareport:'品質報告',sub_po:'PO / 發票',sub_other:'其他',
+role_owner:'資料更新者',role_viewer:'檢視者',updated:'資料更新於 {d}',
+gm:'Good morning',ga:'Good afternoon',ge:'Good evening',
+hero_txt:'{d}。逾期 {o} 項，未來 7 天到期 {w} 項。TSMT 週會：{m}。',
+st_open:'未結',st_overdue:'逾期',st_moving:'運輸中批次',
+pc_open:'{n} 項未結',pc_overdue:'{n} 項逾期',pc_packed:'已包裝 {a} / {b}',pc_noupd:'尚無更新',
+open_title:'未結項目',sort_due:'依到期日排序',tab_all:'全部',tab_overdue:'逾期',tab_week:'未來 7 天',tab_nodue:'無到期日',
+due_today:'今日到期',due_in:'{d} 到期',overdue_n:'逾期 {n} 天',no_due:'無到期日',
+mine:'我的今日待辦',coming:'即將到來',open_cal:'開啟行事曆',nothing:'目前沒有項目。',all_clear:'今天沒有需要處理的事項。',
+f_owners:'負責人',f_due:'到期日',f_opened:'開立日',f_status:'狀態',f_prio:'優先級',f_cat:'類別',f_lot:'批次',f_closed:'結案日',f_reason:'結案原因',
+s_open:'未開始',s_progress:'進行中',s_closed:'已結案',p_high:'高',p_med:'中',p_low:'低',
+c_shipment:'出貨',c_material:'物料',c_production:'生產',c_quality:'品質',c_equipment:'設備',c_docs:'文件',c_other:'其他',
+log:'進度紀錄',back:'返回',
+k_material:'物料',k_equipment:'機台 / 治具',k_sample:'樣品',k_return:'退貨',k_fg:'成品',k_other:'其他',
+st_po:'已建 PO',st_ready:'貨物備妥',st_docs:'發票 / 裝箱單',st_booking:'訂艙',st_shipped:'已出貨 (ETD)',st_arrived:'已到達 (ETA)',st_customs:'已清關',st_delivered:'已送達',st_none:'等待 PO',
+ob_production:'生產中',ob_fg:'成品備妥',ob_packing:'已包裝',ob_booking:'已訂艙',ob_shipped:'已出貨',ob_delivered:'客戶已收',
+b_docs:'文件準備',b_confirm:'等待確認',b_approval:'PR / PO 簽核',b_license:'許可證',b_customs:'海關',b_payment:'費用 / 付款',b_other:'其他',
+lot_info:'出貨資訊',f_qty:'數量',f_terms:'交易方式',f_cost:'費用承擔',f_owner:'負責人',f_po:'PO',f_inv:'發票',f_etd:'ETD 計劃 / 實際',f_eta:'ETA 計劃 / 實際',f_ready:'ARC 備妥日',f_process:'使用製程',f_mode:'運輸方式',f_dest:'目的地',f_shipplan:'計劃出貨',f_shipact:'實際出貨',f_issue:'問題',
+not_set:'未設定',open_days:'已 {n} 天',resolved:'已解除',next_step:'下一步',step_of:'第 {a}/{b} 步',late_d:'延遲 {n} 天',blockers_n:'{n} 項阻礙',
+docs_att:'附件',viewers_see:'檢視者會看到',ask_ph:'向 Mipu 提問…',ask_note:'提問與留言將在下一階段加入。',
+p_lot:'選擇批次',k_packed:'已包裝（品質 {d}）',k_worst:'最低 1A 良率 · {s}',k_hold:'暫停中',k_finish:'預測全批完成',
+ch_pa:'計劃與實際',ch_daily:'每日',lg_plan:'計劃',lg_act:'實際',no_data:'尚無資料',ch_stage:'各製程進度',packed:'已包裝',ch_yield:'各站 1A 良率 · 品質 {d}',warn_at:'低於 95% 警示',yield_note:'長條從 0% 起算，低於 95% 的站點顯示橘色。',ch_status:'出貨狀態分布',
+g_nopo:'等待 PO',g_prep:'已有 PO / 準備中',g_transit:'運輸中',g_done:'已收貨',
+qa_report:'品質報告',qa_hist:'報告歷史',qa_shift:'班別',qa_by:'回報人',th_part:'料號',th_station:'站點',th_input:'投入',th_p1:'1A 通過',th_f1:'1A 不良',th_p2:'2A 通過',th_f2:'2A 不良',th_y1:'1A 良率',th_y2:'2A 良率',th_rt:'重測率',th_rw:'重工',th_ntf:'NTF',th_note:'不良說明',qa_none:'尚無品質報告。',
+vs_plan:'與計劃比較',th_stage:'DPR 製程',th_qain:'品質投入（累計）',th_dpract:'DPR 實際（累計）',th_plancum:'計劃（累計）',th_lotpct:'佔批次 %',
+pl_ms:'出貨節點',pl_by:'{d} 前 {q} pcs',pl_reach:'{d} 達成',pl_noreach:'無法達成',pl_short:'差 {n}',pl_gap:'如何補足差距',pl_ok:'所有出貨節點皆可達成。',
+pl_cap:'將 {st} 由 {a} 提高到 {b} pcs/天（+{p}%），可增加人力或加班。',pl_days:'在 {d} 前增加 {n} 個工作日，可用非工作日：{m}。',pl_delay:'或將此批出貨延至預測日 {d}。',
+th_target:'目標',th_actual:'實際',th_done:'完成',th_today:'今日',th_cap:'每日產能',th_finish:'預測完成',grid_help:'預測列依剩餘數量、每日產能、前製程與非工作日從今天起重新計算。',fc:'預測',tsmt_plan:'TSMT 計劃',actual:'實際',all_dates:'全部日期',around:'今日前後',
+cal_title:'行事曆',ev_etd:'ETD',ev_eta:'ETA',ev_ready:'ARC 備妥',ev_ship:'客戶出貨',ev_due:'到期',ev_ms:'出貨節點',ev_hol:'非工作日',ev_meet:'TSMT 週會',ev_event:'事件',
+docs_title:'文件',open_file:'開啟',docs_none:'此資料夾尚無文件。',
+r_month:'月份',r_closed:'本月結案',r_opened:'本月新增',r_still:'仍未結案',r_avg:'平均結案天數',r_ships:'本月完成出貨',r_days:'耗時（天）',r_age:'已開立（天）',r_none:'無。',r_transit:'運輸天數',r_delay:'ETA 延遲',
+me_confirm:'今日需確認',me_due:'到期與逾期',me_prepare:'需準備',
+a_etdPassed:'ETD {d} 已過，請確認是否已出貨。',a_etdSoon:'ETD {d}，請確認訂艙與出貨。',a_etaPassed:'ETA {d} 已過，請確認是否到貨。',a_etaSoon:'ETA {d}，請確認到貨與清關。',a_stale:'已 {n} 天未更新',a_blocker:'阻礙 · {g}：{x}',a_readyPassed:'備妥日 {d} 已過，請向 ARC 確認。',a_readySoon:'ARC 預計 {d} 備妥，請通知 TSMT。',
+a_obPassed:'計劃出貨日 {d} 已過，請確認狀態。',a_obSoon:'{d} 客戶出貨，請確認準備情況。',a_overdue:'自 {d} 逾期',a_dueSoon:'{d} 到期',a_qaY:'{d} 無品質報告',a_dprShort:'預測在 {d} 前距 {q} pcs 尚差 {n} pcs',a_meeting:'週會 {d}：未結 {n} 項，{m} 項自上次會議後未更新',
+up_title:'更新資料',up_txt:'將新資訊傳給 Claude：品質報告照片、Sabesh 的 DPR Excel、每次會議後的紀錄或簡短說明。Claude 會更新資料檔，下次開啟網站即可看到。',up_last:'最近更新',up_counts:'網站資料筆數',
+wd0:'日',wd1:'一',wd2:'二',wd3:'三',wd4:'四',wd5:'五',wd6:'六'}};
+let lang='en';try{lang=localStorage.getItem('tsmt_lang')||'en'}catch(e){}
+const t=(k,p)=>{let s=(L[lang]&&L[lang][k])||L.en[k]||k;if(p)for(const x in p)s=s.split('{'+x+'}').join(p[x]);return s};
+
+/* ---------------- owner mode ---------------- */
+let OWNER=false;
+try{const q=new URLSearchParams(location.search);if(q.has('owner'))localStorage.setItem('tsmt_owner',q.get('owner')==='0'?'0':'1');OWNER=localStorage.getItem('tsmt_owner')==='1'}catch(e){OWNER=/[?&]owner=1/.test(location.search)}
+
+/* ---------------- helpers ---------------- */
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const TODAY=iso(new Date());
+const pd=s=>{const[a,b,c]=s.split('-').map(Number);return new Date(a,b-1,c)};
+const addDays=(s,n)=>{const d=pd(s);d.setDate(d.getDate()+n);return iso(d)};
+const diff=(a,b)=>Math.round((pd(b)-pd(a))/864e5);
+const dow=s=>pd(s).getDay();
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const fd=s=>{if(!s)return '—';const d=pd(s);return lang==='en'?MON[d.getMonth()]+' '+d.getDate():lang==='zh'?(d.getMonth()+1)+'/'+d.getDate():d.getDate()+'/'+(d.getMonth()+1)};
+const fdw=s=>t('wd'+dow(s))+' '+fd(s);
+const num=n=>(n==null||n==='')?'—':Number(n).toLocaleString('en-US');
+const pct=(a,b)=>b?a/b*100:0;
+const lastLog=o=>(o.log&&o.log.length)?o.log.reduce((m,x)=>x.d>m.d?x:m,o.log[0]):null;
+const sortLog=l=>(l||[]).slice().sort((a,b)=>b.d.localeCompare(a.d));
+const ic=(id,cls)=>`<svg class="i ${cls||''}"><use href="#${id}"/></svg>`;
+const fmtSize=b=>b>1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB';
+
+/* ---------------- projects ---------------- */
+const PCOL={dragon:{c:'#4F8A1E',soft:'#EAF4DF',g:['#7AB83E','#4F8A1E'],icon:'i-chip'},mesh:{c:'#2F6FD6',soft:'#E5EEFC',g:['#5B95EC','#2F6FD6'],icon:'i-wifi'}};
+const PROJ=(D.projects||[]).map(p=>Object.assign({},p,PCOL[p.key]||{c:'#7C88A0',soft:'#EEF0F4',g:['#9AA4B8','#7C88A0'],icon:'i-box'}));
+const projOf=name=>PROJ.find(p=>name&&name.toLowerCase().includes(p.match.toLowerCase()))||null;
+const pchip=name=>{const p=projOf(name);return p?`<span class="chip" style="background:${p.soft};color:${p.c}">${esc(p.name)}</span>`:(name?`<span class="chip gray">${esc(name)}</span>`:'')};
+const pcolor=name=>(projOf(name)||{c:'#7C88A0'}).c;
+
+/* ---------------- domain ---------------- */
+const STEPS=['po','ready','docs','booking','shipped','arrived','customs','delivered'];
+const OB=['production','fg','packing','booking','shipped','delivered'];
+const CATCOL={material:['#4F8A1E','#EAF4DF','i-battery'],equipment:['#5B6B86','#EEF0F4','i-gear'],sample:['#2F6FD6','#E5EEFC','i-flask'],return:['#B87406','#FDF2DD','i-undo'],fg:['#2E8B57','#E3F3EA','i-box'],other:['#7C88A0','#EEF0F4','i-box']};
+const openIssues=()=>D.issues.filter(i=>i.status!=='closed');
+const isOverdue=i=>i.status!=='closed'&&i.dueDate&&i.dueDate<TODAY;
+const shipLate=s=>{if(s.etaPlan&&!s.etaActual&&s.stage<5&&s.etaPlan<TODAY)return diff(s.etaPlan,TODAY);if(s.etaPlan&&s.etaActual&&s.etaActual>s.etaPlan)return diff(s.etaPlan,s.etaActual);if(s.etdPlan&&!s.etdActual&&s.stage<4&&s.etdPlan<TODAY)return diff(s.etdPlan,TODAY);return 0};
+const obLate=o=>o.shipPlan&&o.stage<4&&o.shipPlan<TODAY?diff(o.shipPlan,TODAY):0;
+const shipFilter=(f,s)=>f==='all'?s.stage<7:f==='done'?s.stage>=7:f==='transit'?(s.stage>=4&&s.stage<7):s.stage<7&&s.category===f;
+const dueChip=i=>{if(i.status==='closed')return `<span class="chip ok">${t('s_closed')}</span>`;if(!i.dueDate)return `<span class="chip gray">${t('no_due')}</span>`;const n=diff(TODAY,i.dueDate);if(n<0)return `<span class="chip bad">${t('overdue_n',{n:-n})}</span>`;if(n===0)return `<span class="chip warn">${t('due_today')}</span>`;return `<span class="chip ${n<=7?'warn':'gray'}">${t('due_in',{d:fd(i.dueDate)})}</span>`};
+
+/* ---------------- production plan engine ---------------- */
+function genPlan(p,mode){
+  const start=p.startDate;let last=start;(p.milestones||[]).forEach(m=>{if(m.d>last)last=m.d});if(TODAY>last)last=TODAY;
+  const end=addDays(last,75);const days=[];for(let d=start;d<=end&&days.length<240;d=addDays(d,1))days.push(d);
+  const hol=new Set((p.holidays||[]).map(h=>h.d));const wd=new Set(p.workDays||[1,2,3,4,5,6]);const isWork=d=>wd.has(dow(d))&&!hol.has(d);const res={};
+  (p.stages||[]).forEach(s=>{const act=(p.actuals||{})[s.key]||{};const pred=s.pred&&res[s.pred];const lag=+s.lag||0;const ramp=s.ramp||[];let cum=0,prod=0;const daily={},cumArr=[];
+    days.forEach((d,i)=>{let q=0;if(mode==='forecast'&&d<TODAY){q=+act[d]||0}else if(isWork(d)&&d>=(s.notBefore||start)&&cum<s.target){const rf=prod<ramp.length?ramp[prod]:100;const capQ=Math.round(s.cap*rf/100);let avail=Infinity;if(pred){const j=i-lag;avail=(j>=0?pred.cumArr[j]:0)-cum}q=Math.max(0,Math.min(capQ,s.target-cum,avail))}if(q>0)prod++;cum+=q;daily[d]=q;cumArr.push(cum)});
+    const fi=cumArr.findIndex(c=>c>=s.target);res[s.key]={daily,cumArr,finish:fi>=0?days[fi]:null,total:cum}});
+  return {days,res,isWork};
+}
+const actualCum=(p,key,upTo)=>{const a=(p.actuals||{})[key]||{};let c=0;for(const d in a)if(!upTo||d<=upTo)c+=+a[d]||0;return c};
+const cumAt=(g,key,d)=>{const r=g.res[key];if(!r)return 0;const i=g.days.indexOf(d);if(i>=0)return r.cumArr[i];return d<g.days[0]?0:r.total};
+function expectedCum(p,g,key,d){const a=(p.actuals||{})[key]||{};const lastA=Object.keys(a).filter(x=>x<=d).sort().pop()||'';const tp=(p.tsmtPlan||{})[key];
+  if(tp&&Object.keys(tp).length){let c=actualCum(p,key,lastA||'0000');for(const x in tp)if(x>lastA&&x<=d)c+=+tp[x]||0;const st=p.stages.find(s=>s.key===key);return Math.min(c,st?st.target:c)}return cumAt(g,key,d)}
+function analysePlan(p){
+  const g=genPlan(p,'forecast');const fin=p.finalStage||(p.stages[p.stages.length-1]||{}).key;const fr=g.res[fin];
+  const ms=(p.milestones||[]).map(m=>{const c=cumAt(g,fin,m.d);const ri=fr?fr.cumArr.findIndex(x=>x>=m.qty):-1;return Object.assign({},m,{cum:c,short:Math.max(0,m.qty-c),reach:ri>=0?g.days[ri]:null})});
+  const gap=ms.find(m=>m.short>0&&m.d>=TODAY);const sugg=[];
+  if(gap){let W=0;const M=[];for(let d=TODAY;d<=gap.d;d=addDays(d,1)){if(g.isWork(d))W++;else M.push(d)}let worst=null;
+    p.stages.forEach(s=>{const done=cumAt(g,s.key,addDays(TODAY,-1));const need=Math.max(0,Math.min(gap.qty,s.target)-done);if(!need||!W)return;const req=Math.ceil(need/W);if(req>s.cap)sugg.push({type:'cap',st:s.name,a:s.cap,b:req,p:Math.round((req/s.cap-1)*100)});const r=need/s.cap;if(!worst||r>worst.r)worst={r,s,need}});
+    if(worst){const extra=Math.ceil(worst.need/worst.s.cap)-W;if(extra>0)sugg.push({type:'days',n:extra,d:gap.d,m:M.map(fd).join(', ')||'—'})}if(gap.reach)sugg.push({type:'delay',d:gap.reach})}
+  return {g,fin,ms,gap,sugg};
+}
+
+/* ---------------- agenda & events ---------------- */
+function nextMeeting(){const md=+((D.settings||{}).meetingDay??4);let d=TODAY;while(dow(d)!==md)d=addDays(d,1);return d}
+function agenda(){
+  const W=+((D.settings||{}).window||3),stale=+((D.settings||{}).staleDays||3);const out=[];const push=(g,sev,text,sub,href)=>out.push({g,sev,text,sub,href});
+  D.shipments.forEach(s=>{if(s.stage>=7)return;const h='#/shipment/'+s.id;
+    if(s.etdPlan&&!s.etdActual&&s.stage<4){if(s.etdPlan<TODAY)push('confirm','bad',t('a_etdPassed',{d:fd(s.etdPlan)}),s.title,h);else if(diff(TODAY,s.etdPlan)<=W)push('confirm','warn',t('a_etdSoon',{d:fd(s.etdPlan)}),s.title,h)}
+    if(s.etaPlan&&!s.etaActual&&s.stage>=4&&s.stage<5){if(s.etaPlan<TODAY)push('confirm','bad',t('a_etaPassed',{d:fd(s.etaPlan)}),s.title,h);else if(diff(TODAY,s.etaPlan)<=W)push('confirm','warn',t('a_etaSoon',{d:fd(s.etaPlan)}),s.title,h)}
+    if(s.category==='material'&&s.readyDate&&s.stage<1){if(s.readyDate<TODAY)push('confirm','bad',t('a_readyPassed',{d:fd(s.readyDate)}),s.title,h);else if(diff(TODAY,s.readyDate)<=W)push('prepare','warn',t('a_readySoon',{d:fd(s.readyDate)}),s.title,h)}
+    (s.blockers||[]).filter(b=>!b.done).forEach(b=>push('due','warn',t('a_blocker',{g:t('b_'+b.group),x:b.detail}),s.title,h));
+    const ll=lastLog(s);if(ll&&diff(ll.d,TODAY)>stale)push('confirm','info',t('a_stale',{n:diff(ll.d,TODAY)}),s.title,h)});
+  D.outbound.forEach(o=>{if(o.stage>=5)return;const h='#/outbound/'+o.id;const nm=o.customer+' · '+o.model+' · '+num(o.qty)+' pcs';
+    if(o.shipPlan&&o.stage<4){if(o.shipPlan<TODAY)push('confirm','bad',t('a_obPassed',{d:fd(o.shipPlan)}),nm,h);else if(diff(TODAY,o.shipPlan)<=W)push('confirm','warn',t('a_obSoon',{d:fd(o.shipPlan)}),nm,h)}});
+  openIssues().forEach(i=>{const h='#/issue/'+i.id;if(i.dueDate&&i.dueDate<TODAY)push('due','bad',t('a_overdue',{d:fd(i.dueDate)}),i.topic,h);else if(i.dueDate&&diff(TODAY,i.dueDate)<=2)push('due','warn',t('a_dueSoon',{d:fd(i.dueDate)}),i.topic,h)});
+  D.plans.filter(p=>p.active!==false).forEach(p=>{const a=analysePlan(p);if(a.gap)push('prepare','bad',t('a_dprShort',{n:num(a.gap.short),q:num(a.gap.qty),d:fd(a.gap.d)}),p.name,'#/prod/plan');
+    const y=addDays(TODAY,-1);if(dow(y)!==0&&!(p.holidays||[]).some(h=>h.d===y)&&!D.qa.some(r=>r.date===y&&r.project===p.project))push('confirm','warn',t('a_qaY',{d:fd(y)}),p.name,'#/prod/qa')});
+  const nm=nextMeeting();if(diff(TODAY,nm)<=2){const lastM=addDays(nm,-7);const op=openIssues();push('prepare','info',t('a_meeting',{d:fdw(nm),n:op.length,m:op.filter(i=>{const l=lastLog(i);return !l||l.d<=lastM}).length}),'','#/open')}
+  const o={bad:0,warn:1,info:2};return out.sort((a,b)=>o[a.sev]-o[b.sev]);
+}
+function events(from,to){
+  const ev=[];const add=(d,txt,col,href)=>{if(d&&d>=from&&d<=to)ev.push({d,txt,col,href})};
+  D.shipments.forEach(s=>{if(s.stage>=7)return;const c=pcolor(s.project),h='#/shipment/'+s.id;if(s.etdPlan&&!s.etdActual)add(s.etdPlan,t('ev_etd')+' · '+s.title,c,h);if(s.etaPlan&&!s.etaActual)add(s.etaPlan,t('ev_eta')+' · '+s.title,c,h);if(s.readyDate&&s.stage<1)add(s.readyDate,t('ev_ready')+' · '+s.title,c,h)});
+  D.outbound.forEach(o=>{if(o.stage<4&&o.shipPlan)add(o.shipPlan,t('ev_ship')+' · '+o.customer+' '+num(o.qty),pcolor(o.project),'#/outbound/'+o.id)});
+  openIssues().forEach(i=>{if(i.dueDate)add(i.dueDate,t('ev_due')+' · '+i.topic,pcolor(i.project),'#/issue/'+i.id)});
+  D.plans.forEach(p=>{const c=pcolor(p.project);(p.milestones||[]).forEach(m=>add(m.d,t('ev_ms')+' · '+num(m.qty)+' pcs',c,'#/prod/plan'));(p.events||[]).forEach(e=>add(e.d,e.label,c,'#/prod/plan'));(p.holidays||[]).forEach(h=>add(h.d,t('ev_hol')+' · '+h.label,'#B0B8B2',''))});
+  for(let d=from;d<=to;d=addDays(d,7)){let m=d;while(dow(m)!==+((D.settings||{}).meetingDay??4))m=addDays(m,1);add(m,t('ev_meet')+((D.settings||{}).meetingTime?' '+D.settings.meetingTime:''),'#1B2420','#/open')}
+  const seen=new Set();return ev.filter(e=>{const k=e.d+e.txt;if(seen.has(k))return false;seen.add(k);return true}).sort((a,b)=>a.d.localeCompare(b.d));
+}
+
+/* ---------------- illustrations ---------------- */
+const ART_FACTORY=`<svg viewBox="0 0 360 200" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#DDEFC8"/><stop offset="1" stop-color="#F7FBF2"/></linearGradient></defs><rect width="360" height="200" fill="url(#sky)"/><circle cx="290" cy="50" r="26" fill="#FFF3C9"/><path d="M30 170V110l40 22v-22l40 22v-22l40 22V80h28l8 90z" fill="#7AB83E"/><rect x="186" y="62" width="14" height="30" fill="#4F8A1E"/><path d="M200 170V118h130v52z" fill="#fff" stroke="#D5E6C2" stroke-width="2"/><rect x="216" y="132" width="22" height="16" rx="3" fill="#CFE5B6"/><rect x="248" y="132" width="22" height="16" rx="3" fill="#CFE5B6"/><rect x="280" y="132" width="22" height="16" rx="3" fill="#CFE5B6"/><text x="216" y="111" font-family="Noto Sans TC" font-size="15" font-weight="700" fill="#4F8A1E">智易科技</text><rect y="170" width="360" height="30" fill="#E3EDD8"/><g transform="translate(60 158)"><rect width="46" height="22" rx="4" fill="#2F6FD6"/><rect x="46" y="8" width="18" height="14" rx="3" fill="#2F6FD6"/><circle cx="12" cy="24" r="5" fill="#1B2420"/><circle cx="52" cy="24" r="5" fill="#1B2420"/></g></svg>`;
+const COVER={dragon:`<svg viewBox="0 0 300 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="cg1" x1="0" x2="1"><stop offset="0" stop-color="#7AB83E"/><stop offset="1" stop-color="#4F8A1E"/></linearGradient></defs><rect width="300" height="100" fill="url(#cg1)"/><g fill="none" stroke="rgba(255,255,255,.35)" stroke-width="2"><path d="M0 72h60l20-20h60l20 20h140"/><path d="M0 40h90l20-20h190"/></g><circle cx="80" cy="52" r="4" fill="rgba(255,255,255,.6)"/><circle cx="110" cy="20" r="4" fill="rgba(255,255,255,.6)"/><rect x="200" y="24" width="64" height="50" rx="8" fill="rgba(255,255,255,.9)"/><rect x="212" y="36" width="40" height="26" rx="3" fill="#CFE5B6"/></svg>`,
+mesh:`<svg viewBox="0 0 300 100" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="cg2" x1="0" x2="1"><stop offset="0" stop-color="#5B95EC"/><stop offset="1" stop-color="#2F6FD6"/></linearGradient></defs><rect width="300" height="100" fill="url(#cg2)"/><g fill="none" stroke="rgba(255,255,255,.45)" stroke-width="3" stroke-linecap="round"><path d="M200 62a34 34 0 0 1 48 0"/><path d="M188 50a52 52 0 0 1 72 0"/><path d="M176 38a70 70 0 0 1 96 0"/></g><circle cx="224" cy="76" r="7" fill="#fff"/><rect x="40" y="30" width="34" height="52" rx="12" fill="rgba(255,255,255,.85)"/><rect x="90" y="40" width="28" height="42" rx="10" fill="rgba(255,255,255,.6)"/></svg>`};
+const EMPTY=`<svg viewBox="0 0 120 80" aria-hidden="true"><rect x="18" y="16" width="84" height="56" rx="10" fill="#EEF6E4"/><rect x="30" y="30" width="44" height="6" rx="3" fill="#CFE5B6"/><rect x="30" y="42" width="60" height="6" rx="3" fill="#E1EED3"/><circle cx="92" cy="20" r="12" fill="#7AB83E"/><path d="M86 20l4 4 8-8" stroke="#fff" stroke-width="2.5" fill="none" stroke-linecap="round"/></svg>`;
+const empty=txt=>`<div class="empty">${EMPTY}<div>${esc(txt)}</div></div>`;
+
+/* ---------------- routing & shell ---------------- */
+const route=()=>{const h=(location.hash||'#/open').replace(/^#\/?/,'').split('/');return {v:h[0]||'open',a:h[1]||'',b:h[2]||''}};
+const GROUPS=()=>{
+  const op=openIssues();const sh=D.shipments;
+  return [
+    {key:'open',icon:'i-open',label:t('nav_open'),count:op.length,subs:[['all',t('sub_all'),op.length,'#1B2420']].concat(PROJ.map(p=>[p.key,p.name+' · '+p.customer,op.filter(i=>projOf(i.project)===p).length,p.c])).concat([['overdue',t('sub_overdue'),op.filter(isOverdue).length,'#D64545']])},
+    {key:'ship',icon:'i-truck',label:t('nav_ship'),count:sh.filter(s=>s.stage<7).length,subs:['all','transit','material','equipment','sample','return','done'].map(f=>[f,t('sub_'+f),sh.filter(s=>shipFilter(f,s)).length,f==='done'?'#C9D1CB':'#7AB83E'])},
+    {key:'out',icon:'i-box',label:t('nav_out'),count:D.outbound.filter(o=>o.stage<5).length,subs:[['all',t('sub_all'),D.outbound.filter(o=>o.stage<5).length,'#1B2420']].concat(PROJ.map(p=>[p.key,p.customer,D.outbound.filter(o=>o.stage<5&&projOf(o.project)===p).length,p.c]))},
+    {key:'prod',icon:'i-factory',label:t('nav_prod'),subs:[['overview',t('sub_overview'),null,'#7AB83E'],['qa',t('sub_qa'),D.qa.length,'#7AB83E'],['plan',t('sub_plan'),D.plans.length,'#7AB83E']]},
+    {key:'cal',icon:'i-cal',label:t('nav_cal')},
+    {key:'docs',icon:'i-folder',label:t('nav_docs'),count:D.docs.length,subs:['all','minutes','dpr','qareport','po','other'].map(c=>[c,t('sub_'+c),c==='all'?D.docs.length:D.docs.filter(x=>x.cat===c).length,'#7C88A0'])},
+    {key:'report',icon:'i-chart',label:t('nav_report')}
+  ];
+};
+const VIEW_GROUP={open:'open',issue:'open',ship:'ship',shipment:'ship',out:'out',outbound:'out',prod:'prod',cal:'cal',docs:'docs',report:'report',me:'me',update:'update'};
+function renderSide(){
+  const r=route();const g=VIEW_GROUP[r.v]||'open';
+  const groups=GROUPS().map(G=>{const on=g===G.key;const href='#/'+G.key+(G.subs?'/'+G.subs[0][0]:'');
+    const head=`<a class="ni ${on?'on open':''}" href="${href}">${ic(G.icon)}<span class="lbl">${esc(G.label)}</span>${G.subs?ic('i-right','chev'):''}${!G.subs&&G.count?`<span class="c">${G.count}</span>`:''}${G.subs&&!on&&G.count?`<span class="c">${G.count}</span>`:''}</a>`;
+    const curSub=r.v===G.key?r.a:'';
+    const subs=on&&G.subs?`<div class="sub">${G.subs.map(([k,l,c,col])=>`<a class="si ${curSub===k?'on':''}" href="#/${G.key}/${k}"><i style="background:${col}"></i>${esc(l)}${c!=null?`<span class="c">${c}</span>`:''}</a>`).join('')}</div>`:'';
+    return head+subs}).join('');
+  const nBad=agenda().filter(a=>a.sev==='bad').length;
+  const own=OWNER?`<div class="sep">${t('only_you')}</div><a class="ni ${g==='me'?'on':''}" href="#/me">${ic('i-sun')}<span class="lbl">${t('nav_me')}</span>${nBad?`<span class="c bad">${nBad}</span>`:''}</a><a class="ni ${g==='update'?'on':''}" href="#/update">${ic('i-edit')}<span class="lbl">${t('nav_update')}</span></a>`:'';
+  const owner=(D.settings||{}).owner||'Mipu';
+  document.getElementById('side').innerHTML=`<div class="logo"><div class="mark">a</div><div><b>TSMT Desk</b><small>AVC · India</small></div></div><nav class="nav">${groups}${own}</nav><div class="sideFoot"><div class="av">${OWNER?esc(owner.slice(0,2).toUpperCase()):`<svg class="i" style="stroke:#fff"><use href="#i-msg"/></svg>`}</div><div><b style="font-size:13.5px">${OWNER?esc(owner):t('role_viewer')}</b><div class="muted" style="font-size:12px">${OWNER?t('role_owner'):'TSMT · AVC · ARC'}</div></div></div>`;
+  const bn=[['open','i-open',t('nav_open')],['ship','i-truck',t('nav_ship')],['prod','i-factory',t('nav_prod')],['cal','i-cal',t('nav_cal')],['docs','i-folder',t('nav_docs')]];
+  document.getElementById('bnav').innerHTML=bn.map(([k,i,l])=>`<a href="#/${k}" class="${g===k?'on':''}">${ic(i)}<span>${esc(l.split(' ')[0])}</span></a>`).join('');
+  document.getElementById('langs').innerHTML=[['vi','Tiếng Việt'],['en','English'],['zh','中文']].map(([k,l])=>`<button data-lang="${k}" class="${lang===k?'on':''}">${l}</button>`).join('');
+  document.getElementById('upd').textContent=t('updated',{d:fd(D.updated||TODAY)});
+}
+const crumb=parts=>`<div class="crumb">${parts.map((p,i)=>i<parts.length-1?`<a href="${p[1]}">${esc(p[0])}</a>${ic('i-right')}`:`<b>${esc(p[0])}</b>`).join('')}</div>`;
+
+/* ---------------- views ---------------- */
+function vOpen(sub){
+  const op=openIssues();const proj=PROJ.find(p=>p.key===sub);
+  let list=op;if(proj)list=op.filter(i=>projOf(i.project)===proj);if(sub==='overdue')list=op.filter(isOverdue);
+  const tab=S.openTab||'all';
+  const shown=list.filter(i=>tab==='all'||(tab==='overdue'&&isOverdue(i))||(tab==='week'&&i.dueDate&&i.dueDate>=TODAY&&diff(TODAY,i.dueDate)<=7)||(tab==='nodue'&&!i.dueDate)).sort((a,b)=>(a.dueDate||'9999').localeCompare(b.dueDate||'9999'));
+  const h=new Date().getHours();const greet=h<12?[t('gm'),'早安']:h<18?[t('ga'),'午安']:[t('ge'),'晚安'];
+  const week=op.filter(i=>i.dueDate&&i.dueDate>=TODAY&&diff(TODAY,i.dueDate)<=7).length;
+  const moving=D.shipments.filter(s=>s.stage>=4&&s.stage<7).length+D.outbound.filter(o=>o.stage===4).length;
+  const nm=nextMeeting();
+  const hero=!proj&&sub!=='overdue'?`<div class="hero"><div class="txt"><h1>${greet[0]}${OWNER?', '+esc((D.settings||{}).owner||''):''}<em>${greet[1]}</em></h1><p>${esc(t('hero_txt',{d:fdw(TODAY),o:op.filter(isOverdue).length,w:week,m:fdw(nm)+((D.settings||{}).meetingTime?' '+D.settings.meetingTime:'')}))}</p><div class="stats"><div class="stat"><b class="num">${op.length}</b><span>${t('st_open')}</span></div><div class="stat"><b class="num" style="color:var(--bad)">${op.filter(isOverdue).length}</b><span>${t('st_overdue')}</span></div><div class="stat"><b class="num">${moving}</b><span>${t('st_moving')}</span></div></div></div><div class="art">${ART_FACTORY}</div></div>`:'';
+  const cards=`<div class="projects">${PROJ.filter(p=>!proj||p===proj).map(projCard).join('')}</div>`;
+  const head=proj||sub==='overdue'?crumb([[t('nav_open'),'#/open/all'],[proj?proj.name+' · '+proj.customer:t('sub_overdue')]]):'';
+  const tabs=['all','overdue','week','nodue'].map(k=>{const n=list.filter(i=>k==='all'||(k==='overdue'&&isOverdue(i))||(k==='week'&&i.dueDate&&i.dueDate>=TODAY&&diff(TODAY,i.dueDate)<=7)||(k==='nodue'&&!i.dueDate)).length;return `<button data-tab="${k}" class="${tab===k?'on':''}">${t('tab_'+k)} ${n}</button>`}).join('');
+  const rows=shown.map(i=>{const l=lastLog(i);return `<a class="oi" href="#/issue/${i.id}"><div class="stripe" style="background:${pcolor(i.project)}"></div><div><div class="t">${esc(i.topic)}</div>${l?`<div class="l"><span class="d">${fd(l.d)}</span>${esc(l.text)}</div>`:''}</div><div class="r">${pchip(i.project)}${dueChip(i)}</div></a>`}).join('');
+  const listCard=`<div class="card"><h3>${proj?esc(proj.name)+' · ':''}${t('open_title')} <span class="more">${t('sort_due')}</span></h3><div class="tabs">${tabs}</div>${rows||empty(t('nothing'))}</div>`;
+  const ag=agenda().slice(0,5);
+  const mine=OWNER?`<div class="card mine"><h3>${t('mine')} <span class="ownerTag">${t('only_you')}</span></h3>${ag.length?ag.map(a=>`<a class="task" href="${a.href}"><span class="dot ${a.sev}"></span><div>${esc(a.text)}${a.sub?`<div class="muted" style="font-size:12px">${esc(a.sub)}</div>`:''}</div></a>`).join(''):`<div class="muted">${t('all_clear')}</div>`}</div>`:'';
+  const ev=events(TODAY,addDays(TODAY,21)).filter(e=>!proj||e.col===proj.c||e.col==='#1B2420');const byDay={};ev.forEach(e=>{(byDay[e.d]=byDay[e.d]||[]).push(e)});
+  const upc=`<div class="card"><h3>${t('coming')} <a class="more" href="#/cal">${t('open_cal')}</a></h3><div class="up">${Object.keys(byDay).slice(0,5).map(d=>`<div class="day"><div class="dd ${d===TODAY?'today':''}"><b>${pd(d).getDate()}</b><span>${t('wd'+dow(d))}</span></div><div class="ev">${byDay[d].slice(0,3).map(e=>`<div><i style="background:${e.col}"></i>${e.href?`<a href="${e.href}">${esc(e.txt)}</a>`:esc(e.txt)}</div>`).join('')}</div></div>`).join('')||`<div class="muted">${t('nothing')}</div>`}</div></div>`;
+  return head+hero+cards+`<div class="cols2"><div class="stack">${listCard}</div><div class="stack">${mine}${upc}</div></div>`;
+}
+function projCard(p){
+  const op=openIssues().filter(i=>projOf(i.project)===p);const od=op.filter(isOverdue).length;
+  const plan=D.plans.find(x=>projOf(x.project)===p);
+  let line,prog,chips=[];
+  if(plan){const fin=plan.finalStage;const a=actualCum(plan,fin);line=t('pc_packed',{a:num(a),b:num(plan.lotQty)});prog=pct(a,plan.lotQty);chips.push(`<span class="chip" style="background:${p.soft};color:${p.c}">${esc(plan.name.split('·').pop().trim())}</span>`)}
+  else{const ob=D.outbound.filter(o=>projOf(o.project)===p&&o.stage<5);const o=ob[0];prog=o?pct((o.stage||0)+1,OB.length):0;if(o)chips.push(`<span class="chip" style="background:${p.soft};color:${p.c}">${esc(o.lot||'')} · ${num(o.qty)} pcs</span>`);const late=o?obLate(o):0;if(late)chips.push(`<span class="chip bad">${t('late_d',{n:late})}</span>`);const l=op.map(lastLog).filter(Boolean).sort((a,b)=>b.d.localeCompare(a.d))[0];line=l?l.text:t('pc_noupd')}
+  chips.push(`<span class="chip gray">${t('pc_open',{n:op.length})}</span>`);if(od)chips.push(`<span class="chip bad">${t('pc_overdue',{n:od})}</span>`);
+  return `<a class="proj" href="#/open/${p.key}"><div class="cover">${COVER[p.key]||''}</div><div class="body"><div class="ttl"><div class="ic" style="background:${p.c}"><svg><use href="#${p.icon}"/></svg></div><div><b>${esc(p.name)}</b><span>${esc(p.customer)}</span></div></div><div class="chips">${chips.join('')}</div><div class="muted" style="font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(line)}</div><div class="bar"><i style="width:${Math.min(100,prog).toFixed(0)}%;background:${p.c}"></i></div></div></a>`;
+}
+function vIssue(id){
+  const i=D.issues.find(x=>x.id===id);if(!i)return empty(t('nothing'));const p=projOf(i.project);
+  const lg=sortLog(i.log);
+  return crumb([[t('nav_open'),'#/open/all'],[p?p.name:t('sub_all'),p?'#/open/'+p.key:'#/open/all'],[i.topic]])+
+  `<div class="dhead"><div class="dthumb" style="background:${p?p.soft:'#EEF0F4'}"><svg style="stroke:${p?p.c:'#7C88A0'}"><use href="#${p?p.icon:'i-open'}"/></svg></div><div><div class="chips" style="margin-bottom:6px">${pchip(i.project)}${i.lot?`<span class="chip gray">${esc(i.lot)}</span>`:''}<span class="chip ${i.priority==='high'?'bad':i.priority==='low'?'gray':'warn'}">${t('f_prio')}: ${t('p_'+(i.priority||'med'))}</span></div><h2>${esc(i.topic)}</h2></div><div>${dueChip(i)}</div></div>`+
+  `<div class="cols2"><div class="stack"><div class="card"><h3>${t('log')}</h3><div class="tl">${lg.map(x=>`<div class="tli"><div class="dt"><i></i></div><div><div class="when">${fdw(x.d)}</div><div class="what">${esc(x.text)}</div></div></div>`).join('')||`<div class="muted">${t('nothing')}</div>`}</div></div></div>
+  <div class="stack"><div class="card"><div class="facts" style="grid-template-columns:1fr 1fr"><div class="fact"><span>${t('f_status')}</span><b>${t('s_'+i.status)}</b></div><div class="fact"><span>${t('f_cat')}</span><b>${t('c_'+(i.category||'other'))}</b></div><div class="fact"><span>${t('f_opened')}</span><b>${fd(i.openDate)}</b></div><div class="fact"><span>${t('f_due')}</span><b class="${isOverdue(i)?'late':''}">${fd(i.dueDate)}</b></div>${i.closeDate?`<div class="fact"><span>${t('f_closed')}</span><b>${fd(i.closeDate)}</b></div>`:''}</div><div class="fact" style="margin-top:12px"><span>${t('f_owners')}</span><b style="font-weight:500">${esc(i.owners||'—')}</b></div>${i.closeReason?`<div class="fact" style="margin-top:12px"><span>${t('f_reason')}</span><b style="font-weight:500">${esc(i.closeReason)}</b></div>`:''}</div>
+  <div class="card"><h3>${t('viewers_see')}</h3><div class="ask">${ic('i-msg')}${t('ask_ph')}</div><div class="muted" style="font-size:12.5px;margin-top:8px">${t('ask_note')}</div></div></div></div>`;
+}
+function stepper(steps,stage,prefix,dates){
+  return `<div class="card"><div class="stepper" style="grid-template-columns:repeat(${steps.length},minmax(84px,1fr))">${steps.map((k,i)=>`<div class="stp ${i<=stage?'done':''} ${i===stage+1?'cur':''}"><div class="dot">${i<=stage?'✓':i+1}</div>${esc(t(prefix+k))}${dates&&dates[i]?`<small>${esc(dates[i])}</small>`:''}</div>`).join('')}</div></div>`;
+}
+function vShip(f){
+  f=f||'all';const l=D.shipments.filter(s=>shipFilter(f,s)).sort((a,b)=>(a.etaPlan||a.etdPlan||a.readyDate||'9').localeCompare(b.etaPlan||b.etdPlan||b.readyDate||'9'));
+  return `<div class="ph"><div><h2>${t('nav_ship')}</h2><p>${t('sub_'+f)}</p></div></div>`+(l.length?`<div class="slist">${l.map(shipCard).join('')}</div>`:`<div class="card">${empty(t('nothing'))}</div>`);
+}
+function shipCard(s){
+  const [c,soft,icn]=CATCOL[s.category]||CATCOL.other;const st=s.stage??-1;const late=shipLate(s);const nb=(s.blockers||[]).filter(b=>!b.done).length;
+  const cur=st<0?t('st_none'):t('st_'+STEPS[st]);
+  return `<a class="sc" href="#/shipment/${s.id}"><div class="top"><div class="thumb" style="background:${soft}"><svg style="stroke:${c}"><use href="#${icn}"/></svg></div><div style="min-width:0"><b>${esc(s.title)}</b><div class="rt">${esc(s.from||'?')} → ${esc(s.to||'?')}${s.mode?' · '+esc(s.mode):''}</div></div></div>
+  <div class="prog"><div class="lab"><span><b style="display:inline;font-size:12.5px">${esc(cur)}</b></span><span class="muted">${t('step_of',{a:st+1,b:STEPS.length})}</span></div><div class="bar"><i style="width:${pct(st+1,STEPS.length)}%;background:${pcolor(s.project)}"></i></div></div>
+  <div class="foot">${pchip(s.project)}<span class="chip gray">${t('k_'+s.category)}</span>${s.etaPlan||s.etaActual?`<span class="chip ${late?'bad':'blue'}">ETA ${fd(s.etaActual||s.etaPlan)}</span>`:''}${late?`<span class="chip bad">${t('late_d',{n:late})}</span>`:''}${nb?`<span class="chip warn">${t('blockers_n',{n:nb})}</span>`:''}</div></a>`;
+}
+function vShipment(id){
+  const s=D.shipments.find(x=>x.id===id);if(!s)return empty(t('nothing'));const [c,soft,icn]=CATCOL[s.category]||CATCOL.other;const st=s.stage??-1;const late=shipLate(s);
+  const sub=s.category==='material'?'material':s.stage>=7?'done':s.category;
+  const dates=[];const lg=sortLog(s.log);STEPS.forEach((k,i)=>{if(i===4&&s.etdActual)dates[i]=fd(s.etdActual);else if(i===4&&s.etdPlan)dates[i]=fd(s.etdPlan);if(i===5&&s.etaActual)dates[i]=fd(s.etaActual);else if(i===5&&s.etaPlan)dates[i]=fd(s.etaPlan);if(i===1&&s.readyDate)dates[i]=fd(s.readyDate)});
+  const ns=st<7?STEPS[st+1]:null;
+  const docs=D.docs.filter(d=>d.ref===s.id);
+  const arrow=`<svg viewBox="0 0 34 10"><use href="#i-arrow" stroke="#7C88A0" fill="none" stroke-width="1.6"/></svg>`;
+  const route=(s.from||'?').split('→').map(x=>esc(x.trim())).join(' '+arrow+' ')+' '+arrow+' '+esc(s.to||'?');
+  return crumb([[t('nav_ship'),'#/ship/all'],[t('sub_'+sub),'#/ship/'+sub],[s.title]])+
+  `<div class="dhead"><div class="dthumb" style="background:${soft}"><svg style="stroke:${c}"><use href="#${icn}"/></svg></div><div><div class="chips" style="margin-bottom:6px">${pchip(s.project)}${s.lot?`<span class="chip gray">${esc(s.lot)}</span>`:''}<span class="chip gray">${t('k_'+s.category)}${s.process?' · '+esc(s.process):''}</span>${late?`<span class="chip bad">${t('late_d',{n:late})}</span>`:''}</div><h2>${esc(s.title)}</h2><div class="route">${route}${s.mode?' · '+esc(s.mode):''}</div></div><div>${ns?`<span class="chip blue">${t('next_step')}: ${t('st_'+ns)}</span>`:''}</div></div>`+
+  stepper(STEPS,st,'st_',dates)+
+  `<div class="cols2"><div class="stack"><div class="card"><h3>${t('lot_info')}</h3><div class="facts">
+    <div class="fact"><span>${t('f_qty')}</span><b class="num">${s.qty?num(s.qty)+' pcs':t('not_set')}</b></div>
+    <div class="fact"><span>${t('f_terms')}</span><b>${esc(s.terms||t('not_set'))}</b></div>
+    <div class="fact"><span>${t('f_cost')}</span><b>${esc(s.costBearer||t('not_set'))}</b></div>
+    <div class="fact"><span>${t('f_owner')}</span><b>${esc(s.owner||t('not_set'))}</b></div>
+    <div class="fact"><span>${t('f_po')}</span><b>${esc(s.po||(st>=0?'✓':t('not_set')))}</b></div>
+    <div class="fact"><span>${t('f_inv')}</span><b>${esc(s.invoice||'—')}</b></div>
+    <div class="fact"><span>${t('f_etd')}</span><b>${fd(s.etdPlan)} / ${fd(s.etdActual)}</b></div>
+    <div class="fact"><span>${t('f_eta')}</span><b class="${late?'late':''}">${fd(s.etaPlan)} / ${fd(s.etaActual)}</b></div>
+    ${s.category==='material'?`<div class="fact"><span>${t('f_ready')}</span><b>${fd(s.readyDate)}</b></div>`:''}
+  </div></div>
+  ${(s.blockers||[]).map(b=>`<div class="blocker ${b.done?'done':''}"><div class="ic">${ic(b.done?'i-check':'i-alert')}</div><div><b>${esc(t('b_'+b.group))}</b> <span class="muted">· ${b.done?t('resolved'):t('open_days',{n:b.since?diff(b.since,TODAY):0})}</span><div style="font-size:13.5px;margin-top:2px">${esc(b.detail)}</div></div></div>`).join('')}
+  <div class="card"><h3>${t('log')}</h3><div class="tl">${lg.map(x=>`<div class="tli"><div class="dt"><i></i></div><div><div class="when">${fdw(x.d)}</div><div class="what">${esc(x.text)}</div></div></div>`).join('')||`<div class="muted">${t('nothing')}</div>`}</div></div></div>
+  <div class="stack"><div class="card"><h3>${t('docs_att')}</h3>${docs.length?docs.map(docRow).join(''):`<div class="muted" style="font-size:13px">${t('docs_none')}</div>`}</div>
+  <div class="card"><h3>${t('viewers_see')}</h3><div class="ask">${ic('i-msg')}${t('ask_ph')}</div><div class="muted" style="font-size:12.5px;margin-top:8px">${t('ask_note')}</div></div></div></div>`;
+}
+function vOut(f){
+  const p=PROJ.find(x=>x.key===f);let l=D.outbound.filter(o=>!p||projOf(o.project)===p).sort((a,b)=>(a.shipPlan||'9').localeCompare(b.shipPlan||'9'));
+  return `<div class="ph"><div><h2>${t('nav_out')}</h2><p>${p?esc(p.customer):t('sub_all')}</p></div></div>`+(l.length?`<div class="slist">${l.map(o=>{const st=o.stage??-1;const late=obLate(o);const pr=projOf(o.project)||{c:'#7C88A0',soft:'#EEF0F4',icon:'i-box'};return `<a class="sc" href="#/outbound/${o.id}"><div class="top"><div class="thumb" style="background:${pr.soft}"><svg style="stroke:${pr.c}"><use href="#${pr.icon}"/></svg></div><div style="min-width:0"><b>${esc(o.customer)} · ${num(o.qty)} pcs</b><div class="rt">${esc(o.model)}${o.dest?' → '+esc(o.dest):''}</div></div></div><div class="prog"><div class="lab"><b style="font-size:12.5px">${t('ob_'+OB[Math.max(0,st)])}</b><span class="muted">${t('step_of',{a:st+1,b:OB.length})}</span></div><div class="bar"><i style="width:${pct(st+1,OB.length)}%;background:${pr.c}"></i></div></div><div class="foot">${pchip(o.project)}<span class="chip ${late?'bad':'blue'}">${t('f_shipplan')}: ${fd(o.shipPlan)}</span>${late?`<span class="chip bad">${t('late_d',{n:late})}</span>`:''}</div></a>`}).join('')}</div>`:`<div class="card">${empty(t('nothing'))}</div>`);
+}
+function vOutbound(id){
+  const o=D.outbound.find(x=>x.id===id);if(!o)return empty(t('nothing'));const pr=projOf(o.project)||{c:'#7C88A0',soft:'#EEF0F4',icon:'i-box',key:'all'};const late=obLate(o);const lg=sortLog(o.log);
+  const dates=[];if(o.shipActual)dates[4]=fd(o.shipActual);else if(o.shipPlan)dates[4]=fd(o.shipPlan);if(o.eta)dates[5]=fd(o.eta);
+  return crumb([[t('nav_out'),'#/out/all'],[pr.customer||'—','#/out/'+pr.key],[o.model+' · '+num(o.qty)+' pcs']])+
+  `<div class="dhead"><div class="dthumb" style="background:${pr.soft}"><svg style="stroke:${pr.c}"><use href="#${pr.icon}"/></svg></div><div><div class="chips" style="margin-bottom:6px">${pchip(o.project)}${o.lot?`<span class="chip gray">${esc(o.lot)}</span>`:''}${late?`<span class="chip bad">${t('late_d',{n:late})}</span>`:''}</div><h2>${esc(o.customer)} · ${esc(o.model)}</h2><div class="route">TSMT <svg viewBox="0 0 34 10"><use href="#i-arrow" stroke="#7C88A0" fill="none" stroke-width="1.6"/></svg> ${esc(o.dest||'?')}${o.mode?' · '+esc(o.mode):''}</div></div><div></div></div>`+stepper(OB,o.stage??-1,'ob_',dates)+
+  `<div class="cols2"><div class="stack"><div class="card"><h3>${t('lot_info')}</h3><div class="facts"><div class="fact"><span>${t('f_qty')}</span><b>${num(o.qty)} pcs</b></div><div class="fact"><span>${t('f_shipplan')}</span><b class="${late?'late':''}">${fd(o.shipPlan)}</b></div><div class="fact"><span>${t('f_shipact')}</span><b>${fd(o.shipActual)}</b></div><div class="fact"><span>ETA</span><b>${fd(o.eta)}</b></div><div class="fact"><span>${t('f_dest')}</span><b>${esc(o.dest||t('not_set'))}</b></div><div class="fact"><span>${t('f_mode')}</span><b>${esc(o.mode||t('not_set'))}</b></div></div></div>
+  ${o.issue?`<div class="blocker"><div class="ic">${ic('i-alert')}</div><div><b>${t('f_issue')}</b><div style="font-size:13.5px;margin-top:2px">${esc(o.issue)}</div></div></div>`:''}
+  <div class="card"><h3>${t('log')}</h3><div class="tl">${lg.map(x=>`<div class="tli"><div class="dt"><i></i></div><div><div class="when">${fdw(x.d)}</div><div class="what">${esc(x.text)}</div></div></div>`).join('')}</div></div></div>
+  <div class="stack"><div class="card"><h3>${t('viewers_see')}</h3><div class="ask">${ic('i-msg')}${t('ask_ph')}</div><div class="muted" style="font-size:12.5px;margin-top:8px">${t('ask_note')}</div></div></div></div>`;
+}
+
+/* production */
+const qaCalc=r=>{const n=+r.input||0;return {y1:pct(+r.p1||0,n),y2:pct((+r.p1||0)+(+r.p2||0),n),rt:pct(+r.p2||0,n),f2:(+r.f1||0)-(+r.p2||0)}};
+const curPlan=()=>D.plans.find(p=>p.id===S.planId)||D.plans[0];
+const latestQA=p=>D.qa.filter(r=>!p||r.planId===p.id||r.project===p.project).sort((a,b)=>(b.date+(b.time||'')).localeCompare(a.date+(a.time||'')))[0];
+function lotSel(){return D.plans.length>1?`<div class="seg">${D.plans.map(p=>`<button data-plan="${p.id}" class="${curPlan()===p?'on':''}"><i style="background:${pcolor(p.project)}"></i>${esc(p.name)}</button>`).join('')}</div>`:`<div class="seg">${D.plans.map(p=>`<button class="on"><i style="background:${pcolor(p.project)}"></i>${esc(p.name)}</button>`).join('')}</div>`}
+function vProdOverview(){
+  const p=curPlan();if(!p)return `<div class="card">${empty(t('nothing'))}</div>`;const A=analysePlan(p);const q=latestQA(p);const col=pcolor(p.project);
+  const ov=q?(q.sections||[]).filter(s=>!s.hold).flatMap(s=>s.rows):[];const hold=q?(q.sections||[]).filter(s=>s.hold):[];
+  const pack=ov.filter(r=>/gift\s*box/i.test(r.station)).reduce((a,r)=>a+(+r.input||0),0);
+  const fails=ov.filter(r=>+r.input>0&&+r.f1>0).sort((a,b)=>qaCalc(a).y1-qaCalc(b).y1);const worst=fails[0];
+  const holdQty=hold.reduce((a,s)=>{const m=String(s.name).match(/(\d[\d,]*)\s*pcs/i);return a+(m?+m[1].replace(/,/g,''):0)},0);
+  const kp=`<div class="kpis"><div class="kpi"><div class="kic" style="background:${PCOL.dragon.soft}"><svg style="stroke:${col}"><use href="#i-box"/></svg></div><div><b class="num">${num(pack||actualCum(p,A.fin))}</b><span>${t('k_packed',{d:q?fd(q.date):'—'})}</span></div></div>
+  <div class="kpi"><div class="kic" style="background:var(--warn-soft)"><svg style="stroke:var(--warn)"><use href="#i-alert"/></svg></div><div><b class="num">${worst?qaCalc(worst).y1.toFixed(2)+'%':'—'}</b><span>${t('k_worst',{s:worst?esc(worst.station):'—'})}</span></div></div>
+  <div class="kpi"><div class="kic" style="background:var(--bad-soft)"><svg style="stroke:var(--bad)"><use href="#i-chip"/></svg></div><div><b class="num">${num(holdQty)}</b><span>${t('k_hold')}</span></div></div>
+  <div class="kpi"><div class="kic" style="background:var(--ok-soft)"><svg style="stroke:var(--ok)"><use href="#i-cal"/></svg></div><div><b class="num">${fd(A.g.res[A.fin]&&A.g.res[A.fin].finish)}</b><span>${t('k_finish')}</span></div></div></div>`;
+  // plan vs actual chart
+  const stKey=S.chartStage&&p.stages.some(s=>s.key===S.chartStage)?S.chartStage:(p.stages.find(s=>s.key==='ASSY')||p.stages[0]).key;
+  const base=genPlan(p,'baseline');const act=(p.actuals||{})[stKey]||{};const tp=(p.tsmtPlan||{})[stKey]||{};
+  const days=[];for(let d=addDays(TODAY,-18);d<=addDays(TODAY,6);d=addDays(d,1)){const pv=tp[d]!=null?+tp[d]:(base.res[stKey].daily[d]||0);const av=act[d];if(pv||av!=null||(d<=TODAY&&base.isWork(d)))days.push({d,pv,av})}
+  const dd=days.slice(-14);const mx=Math.max(100,...dd.map(x=>Math.max(x.pv||0,x.av||0)));const top=Math.ceil(mx/100)*100;
+  const W=600,H=230,x0=44,y0=190,y1=16,bw=Math.min(18,(W-x0-10)/dd.length/2.6);const step=(W-x0-10)/Math.max(1,dd.length);const Y=v=>y0-(v/top)*(y0-y1);
+  const grid=[0,.25,.5,.75,1].map(f=>`<line x1="${x0}" x2="${W-6}" y1="${Y(top*f)}" y2="${Y(top*f)}" stroke="#EEF1EC"/><text x="${x0-6}" y="${Y(top*f)+4}" text-anchor="end" font-size="11" fill="#6B7685">${Math.round(top*f)}</text>`).join('');
+  const bars=dd.map((x,i)=>{const cx=x0+step*i+step/2;const pvH=y0-Y(x.pv||0);const hasA=x.av!=null&&x.d<=TODAY;const avH=hasA?y0-Y(x.av):0;
+    return `<rect x="${cx-bw-1}" y="${y0-pvH}" width="${bw}" height="${pvH}" rx="4" fill="#D8E8C6"><title>${t('lg_plan')} ${fd(x.d)}: ${x.pv}</title></rect>${hasA?`<rect x="${cx+1}" y="${y0-avH}" width="${bw}" height="${Math.max(avH,0)}" rx="4" fill="${col}"><title>${t('lg_act')} ${fd(x.d)}: ${x.av}</title></rect>`:(x.d<=TODAY&&x.pv?`<rect x="${cx+1}" y="${y0-2}" width="${bw}" height="2" fill="#D64545"/>`:'')}<text x="${cx}" y="${y0+16}" text-anchor="middle" font-size="10.5" fill="${x.d===TODAY?'#1B2420':'#6B7685'}" font-weight="${x.d===TODAY?700:400}">${fd(x.d)}</text>`}).join('');
+  const missing=dd.some(x=>x.d<=TODAY&&x.pv&&x.av==null);
+  const chart=`<div class="card"><h3>${t('ch_pa')} <select class="sel" id="stageSel">${p.stages.map(s=>`<option value="${s.key}" ${s.key===stKey?'selected':''}>${esc(s.name)}</option>`).join('')}</select><span class="more">${t('ch_daily')}</span></h3><div class="legend"><span><i style="background:#D8E8C6"></i>${t('lg_plan')}</span><span><i style="background:${col}"></i>${t('lg_act')}</span>${missing?`<span><i style="background:#D64545;height:3px"></i>${t('no_data')}</span>`:''}</div><svg viewBox="0 0 ${W} ${H}" width="100%" style="margin-top:8px;font-family:inherit">${grid}${bars}</svg></div>`;
+  // stage progress
+  const done=actualCum(p,A.fin);const ring=pct(done,p.lotQty);const C=2*Math.PI*48;
+  const stg=`<div class="card"><h3>${t('ch_stage')}</h3><div style="display:flex;flex-direction:column;gap:14px;align-items:stretch"><svg viewBox="0 0 120 120" width="110" height="110" style="align-self:center"><circle cx="60" cy="60" r="48" fill="none" stroke="#EEF1EC" stroke-width="12"/><circle cx="60" cy="60" r="48" fill="none" stroke="${col}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${C*ring/100} ${C}" transform="rotate(-90 60 60)"/><text x="60" y="60" text-anchor="middle" font-size="22" font-weight="800" fill="#1B2420">${ring.toFixed(0)}%</text><text x="60" y="78" text-anchor="middle" font-size="11" fill="#6B7685">${t('packed')}</text></svg><div style="width:100%">${p.stages.map(s=>{const v=pct(actualCum(p,s.key),s.target);return `<div class="stage"><span>${esc(s.name)}</span><div class="tr"><i style="width:${Math.min(100,v)}%;background:${v>=100?'var(--ok)':col}"></i></div><span class="num" style="text-align:right">${v.toFixed(0)}%</span></div>`}).join('')}</div></div></div>`;
+  // yield
+  const yr=ov.filter(r=>+r.input>0&&+r.f1>0).sort((a,b)=>qaCalc(b).y1-qaCalc(a).y1);
+  const yld=`<div class="card"><h3>${t('ch_yield',{d:q?fd(q.date):'—'})} <span class="more">${t('warn_at')}</span></h3>${yr.length?yr.map(r=>{const y=qaCalc(r).y1;return `<div class="hb"><span>${esc(r.station)}</span><div class="tr"><i style="width:${y}%;background:${y<95?'var(--warn)':'var(--ok)'}"></i></div><span class="v num" style="${y<95?'color:var(--warn)':''}">${y.toFixed(2)}%</span></div>`}).join('')+`<div class="muted" style="font-size:12px;margin-top:6px">${t('yield_note')}</div>`:empty(t('qa_none'))}</div>`;
+  // status donut
+  const grp=[['g_nopo',s=>(s.stage??-1)<0,'#B87406'],['g_prep',s=>s.stage>=0&&s.stage<4,'#7AB83E'],['g_transit',s=>s.stage>=4&&s.stage<7,'#2F6FD6'],['g_done',s=>s.stage>=7,'#C9D1CB']].map(([k,f,c])=>({k,c,n:D.shipments.filter(f).length}));
+  const tot=grp.reduce((a,g)=>a+g.n,0)||1;const R=44,CC=2*Math.PI*R;let off=0;
+  const donut=`<div class="card"><h3>${t('ch_status')}</h3><div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap"><svg viewBox="0 0 120 120" width="120" height="120"><g transform="rotate(-90 60 60)" fill="none" stroke-width="14">${grp.map(g=>{const len=CC*g.n/tot;const el=g.n?`<circle cx="60" cy="60" r="${R}" stroke="${g.c}" stroke-dasharray="${len} ${CC}" stroke-dashoffset="${-off}"/>`:'';off+=len;return el}).join('')}</g><text x="60" y="67" text-anchor="middle" font-size="22" font-weight="800" fill="#1B2420">${D.shipments.length}</text></svg><div style="display:flex;flex-direction:column;gap:8px;font-size:13px">${grp.map(g=>`<a href="#/ship/${g.k==='g_done'?'done':g.k==='g_transit'?'transit':'all'}"><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${g.c};margin-right:7px"></i>${t(g.k)} · <b>${g.n}</b></a>`).join('')}</div></div></div>`;
+  return `<div class="ph"><div><h2>${t('nav_prod')}</h2><p>${t('sub_overview')}</p></div><div class="right">${lotSel()}</div></div>`+kp+`<div class="g2">${chart}${stg}</div><div class="g2">${yld}${donut}</div>`;
+}
+function vProdQA(){
+  const list=D.qa.slice().sort((a,b)=>(b.date+(b.time||'')).localeCompare(a.date+(a.time||'')));
+  const head=`<div class="ph"><div><h2>${t('sub_qa')}</h2><p>${t('nav_prod')}</p></div></div>`;if(!list.length)return head+`<div class="card">${empty(t('qa_none'))}</div>`;
+  const r=list.find(x=>x.id===S.qaId)||list[0];const plan=D.plans.find(p=>p.id===r.planId)||D.plans.find(p=>p.project===r.project);
+  const rows=sec=>`<tr class="secrow ${sec.hold?'hold':''}"><td colspan="12">${esc(sec.name)}</td></tr>`+sec.rows.map(x=>{const c=qaCalc(x);return `<tr class="${sec.hold?'hold':''}"><td>${esc(x.part||'')}</td><td><b>${esc(x.station)}</b></td><td class="n">${num(x.input)}</td><td class="n">${num(x.p1)}</td><td class="n">${num(x.f1)}</td><td class="n">${num(x.p2)}</td><td class="n">${num(c.f2)}</td><td class="n ${c.y1<95?'late':''}">${c.y1.toFixed(2)}%</td><td class="n ${c.y2<99?'late':''}">${c.y2.toFixed(2)}%</td><td class="n">${x.rework||''}</td><td class="n">${x.ntf||''}</td><td>${esc(x.note||'')}</td></tr>`}).join('');
+  let vs='';if(plan){const g=genPlan(plan,'forecast');const m=(r.sections||[]).filter(s=>!s.hold).flatMap(s=>s.rows).filter(x=>x.stage&&plan.stages.some(s=>s.key===x.stage));
+    if(m.length)vs=`<div class="card"><h3>${t('vs_plan')} <span class="more">${esc(plan.name)}</span></h3><div class="tw"><table><thead><tr><th>${t('th_station')}</th><th>${t('th_stage')}</th><th class="n">${t('th_qain')}</th><th class="n">${t('th_dpract')}</th><th class="n">${t('th_plancum')}</th><th class="n">${t('th_lotpct')}</th><th></th></tr></thead><tbody>${m.map(x=>{const st=plan.stages.find(s=>s.key===x.stage);const lp=pct(+x.input,plan.lotQty);return `<tr><td>${esc(x.station)}</td><td>${esc(st.name)}</td><td class="n">${num(x.input)}</td><td class="n">${num(actualCum(plan,x.stage,r.date))}</td><td class="n">${num(expectedCum(plan,g,x.stage,r.date))}</td><td class="n">${lp.toFixed(0)}%</td><td style="width:130px"><div class="bar"><i style="width:${Math.min(100,lp)}%;background:${pcolor(plan.project)}"></i></div></td></tr>`}).join('')}</tbody></table></div></div>`}
+  return head+`<div class="card"><h3>${t('qa_report')} · ${esc(r.project||'')} <span class="muted" style="font-weight:500;font-size:13px">${fdw(r.date)} ${esc(r.time||'')} · ${t('qa_shift')} ${esc(r.shift||'')} · ${esc(r.reporter||'')}</span></h3><div class="tw"><table><thead><tr><th>${t('th_part')}</th><th>${t('th_station')}</th><th class="n">${t('th_input')}</th><th class="n">${t('th_p1')}</th><th class="n">${t('th_f1')}</th><th class="n">${t('th_p2')}</th><th class="n">${t('th_f2')}</th><th class="n">${t('th_y1')}</th><th class="n">${t('th_y2')}</th><th class="n">${t('th_rw')}</th><th class="n">${t('th_ntf')}</th><th>${t('th_note')}</th></tr></thead><tbody>${(r.sections||[]).map(rows).join('')}</tbody></table></div></div>`+vs+
+  `<div class="card"><h3>${t('qa_hist')}</h3><div class="tw"><table><tbody>${list.map(x=>`<tr data-qa="${x.id}" style="cursor:pointer;${x.id===r.id?'font-weight:700':''}"><td>${fdw(x.date)} ${esc(x.time||'')}</td><td>${t('qa_shift')} ${esc(x.shift||'')}</td><td>${pchip(x.project)}</td><td>${esc(x.reporter||'')}</td></tr>`).join('')}</tbody></table></div></div>`;
+}
+function vProdPlan(){
+  const p=curPlan();if(!p)return `<div class="card">${empty(t('nothing'))}</div>`;const A=analysePlan(p);const g=A.g;const base=genPlan(p,'baseline');const col=pcolor(p.project);
+  const ms=A.ms.map(m=>`<span class="chip ${m.short&&m.d>=TODAY?'bad':m.short?'warn':'ok'}">${esc(m.label||'')} · ${t('pl_by',{q:num(m.qty),d:fd(m.d)})} · ${m.short?t('pl_short',{n:num(m.short)})+' · ':''}${m.reach?t('pl_reach',{d:fd(m.reach)}):t('pl_noreach')}</span>`).join('');
+  const sg=A.gap?`<div class="sugg"><b>${t('pl_gap')}: ${esc(A.gap.label||'')} · ${t('pl_by',{q:num(A.gap.qty),d:fd(A.gap.d)})}</b>${A.sugg.map(s=>`<div>• ${s.type==='cap'?t('pl_cap',{st:esc(s.st),a:s.a,b:s.b,p:s.p}):s.type==='days'?t('pl_days',{n:s.n,d:fd(s.d),m:esc(s.m)}):t('pl_delay',{d:fd(s.d)})}</div>`).join('')}</div>`:`<div class="sugg ok">${t('pl_ok')}</div>`;
+  const stbl=`<div class="card"><div class="tw"><table><thead><tr><th>${t('th_stage')}</th><th class="n">${t('th_target')}</th><th class="n">${t('th_actual')}</th><th>${t('th_done')}</th><th class="n">${t('th_today')}</th><th class="n">${t('th_cap')}</th><th>${t('th_finish')}</th></tr></thead><tbody>${p.stages.map(s=>{const a=actualCum(p,s.key);const v=pct(a,s.target);return `<tr><td><b>${esc(s.name)}</b></td><td class="n">${num(s.target)}</td><td class="n">${num(a)}</td><td style="min-width:140px"><div style="display:flex;gap:8px;align-items:center"><div class="bar" style="flex:1"><i style="width:${Math.min(100,v)}%;background:${v>=100?'var(--ok)':col}"></i></div><span class="num" style="font-size:12px">${v.toFixed(0)}%</span></div></td><td class="n">${num(g.res[s.key].daily[TODAY]||0)}</td><td class="n">${num(s.cap)}</td><td>${fd(g.res[s.key].finish)}</td></tr>`}).join('')}</tbody></table></div></div>`;
+  let days=g.days;if(!S.gridAll){const a=addDays(TODAY,-10),b=addDays(TODAY,25);days=days.filter(d=>d>=a&&d<=b)}
+  const hol={};(p.holidays||[]).forEach(h=>hol[h.d]=h.label);const evm={};(p.events||[]).forEach(e=>evm[e.d]=e.label);
+  const hdr=`<tr><th class="sl">${t('th_stage')}</th>${days.map(d=>`<th class="${d===TODAY?'today':''}" title="${esc(hol[d]||evm[d]||'')}">${fd(d)}<br><span class="muted">${t('wd'+dow(d))}</span>${hol[d]?`<br><span class="hl">${esc(hol[d].slice(0,10))}</span>`:''}${evm[d]?'<br><span class="hl">◆</span>':''}</th>`).join('')}</tr>`;
+  const body=p.stages.map(s=>{const act=(p.actuals||{})[s.key]||{};const tp=(p.tsmtPlan||{})[s.key]||{};const off=d=>g.isWork(d)?'':'off';
+    return `<tr class="pl"><td class="sl"><b style="color:var(--ink)">${esc(s.name)}</b> · ${t('fc')}</td>${days.map(d=>{const v=d<TODAY?(base.res[s.key].daily[d]||0):(g.res[s.key].daily[d]||0);return `<td class="${off(d)} ${d===TODAY?'today':''}">${v||''}</td>`}).join('')}</tr>`+
+    (S.showTsmt&&Object.keys(tp).length?`<tr class="pl"><td class="sl">${t('tsmt_plan')}</td>${days.map(d=>`<td class="${off(d)} ${d===TODAY?'today':''}">${tp[d]||''}</td>`).join('')}</tr>`:'')+
+    `<tr><td class="sl">${t('actual')}</td>${days.map(d=>{const v=act[d];const pv=base.res[s.key].daily[d]||0;const cls=d<=TODAY&&v!=null&&pv?(v<pv?'under':v>pv?'over':''):'';return `<td class="${off(d)} ${d===TODAY?'today':''} ${cls}">${v??''}</td>`}).join('')}</tr>`}).join('');
+  return `<div class="ph"><div><h2>${t('sub_plan')}</h2><p>${esc(p.note||'')}</p></div><div class="right">${lotSel()}</div></div>`+
+  `<div class="card"><h3>${t('pl_ms')}</h3><div class="chips">${ms}</div><div style="margin-top:12px">${sg}</div></div>`+stbl+
+  `<div class="card"><h3><span class="muted" style="font-weight:500;font-size:13px;max-width:70ch">${t('grid_help')}</span><span class="more" style="display:flex;gap:8px"><button class="btn" data-act="gridAll" style="padding:5px 11px">${S.gridAll?t('around'):t('all_dates')}</button>${p.tsmtPlan?`<button class="btn ${S.showTsmt?'pri':''}" data-act="showTsmt" style="padding:5px 11px">${t('tsmt_plan')}</button>`:''}</span></h3>${(p.events||[]).length?`<div class="muted" style="font-size:12.5px;margin-bottom:8px">◆ ${p.events.map(e=>fd(e.d)+' '+esc(e.label)).join(' · ')}</div>`:''}<div class="tw"><table class="grid"><thead>${hdr}</thead><tbody>${body}</tbody></table></div></div>`;
+}
+function vCal(){
+  const m=S.calMonth||TODAY.slice(0,7);const [y,mo]=m.split('-').map(Number);const first=new Date(y,mo-1,1);const startOff=(first.getDay()+6)%7;
+  const from=iso(new Date(y,mo-1,1-startOff));const to=addDays(from,41);const ev=events(from,to);const by={};ev.forEach(e=>{(by[e.d]=by[e.d]||[]).push(e)});
+  const monthName=lang==='en'?MON[mo-1]+' '+y:lang==='zh'?y+' 年 '+mo+' 月':'Tháng '+mo+'/'+y;
+  const cells=[];for(let i=0;i<42;i++){const d=addDays(from,i);const inM=d.slice(0,7)===m;const isOff=dow(d)===0;const es=by[d]||[];cells.push(`<div class="cd ${inM?'':'out'} ${d===TODAY?'td':''} ${isOff&&inM?'off':''}"><b style="${inM?'':'color:#B0B8B2'}">${pd(d).getDate()}</b>${inM?es.slice(0,3).map(e=>`<a class="ev" href="${e.href||'#/cal'}" title="${esc(e.txt)}" style="background:${e.col}1F;color:${e.col==='#B0B8B2'?'#6B7685':e.col}">${esc(e.txt)}</a>`).join('')+(es.length>3?`<span class="muted" style="font-size:11px">+${es.length-3}</span>`:''):''}</div>`)}
+  const list=ev.filter(e=>e.d.slice(0,7)===m&&e.d>=TODAY).slice(0,12);
+  return `<div class="ph"><div><h2>${t('cal_title')}</h2><p>${monthName}</p></div><div class="right"><button class="btn" data-cal="-1" aria-label="prev">${ic('i-left')}</button><button class="btn" data-cal="0">${fd(TODAY)}</button><button class="btn" data-cal="1" aria-label="next">${ic('i-right')}</button></div></div>`+
+  `<div class="card"><div class="calg">${[1,2,3,4,5,6,0].map(d=>`<div class="wd">${t('wd'+d)}</div>`).join('')}${cells.join('')}</div></div>`+
+  `<div class="card"><h3>${t('coming')}</h3><div class="up">${list.map(e=>`<div class="day"><div class="dd ${e.d===TODAY?'today':''}"><b>${pd(e.d).getDate()}</b><span>${t('wd'+dow(e.d))}</span></div><div class="ev"><div><i style="background:${e.col}"></i>${e.href?`<a href="${e.href}">${esc(e.txt)}</a>`:esc(e.txt)}</div></div></div>`).join('')||`<div class="muted">${t('nothing')}</div>`}</div></div>`;
+}
+function docRow(d){const ext=(d.file.split('.').pop()||'').toLowerCase();const col={xlsx:'#1F7A45',xls:'#1F7A45',csv:'#1F7A45',pdf:'#C2372E',png:'#7C88A0',jpg:'#7C88A0',jpeg:'#7C88A0',webp:'#7C88A0',docx:'#2F6FD6',pptx:'#D9822B'}[ext]||'#7C88A0';
+  return `<a class="doc" href="${esc(d.file)}" target="_blank" rel="noopener"><div class="fi" style="background:${col}">${esc(ext.toUpperCase().slice(0,4))}</div><div style="min-width:0"><div class="nm">${esc(d.title)}</div><div class="sz">${fd(d.date)}${d.size?' · '+fmtSize(d.size):''}</div></div><div class="open chips">${pchip(d.project)}<span class="chip blue">${ic('i-ext')}${t('open_file')}</span></div></a>`}
+function vDocs(c){c=c||'all';const l=D.docs.filter(d=>c==='all'||d.cat===c).sort((a,b)=>b.date.localeCompare(a.date));
+  return `<div class="ph"><div><h2>${t('docs_title')}</h2><p>${t('sub_'+c)}</p></div></div><div class="card">${l.length?l.map(docRow).join(''):empty(t('docs_none'))}</div>`}
+function vReport(){
+  const m=S.month||TODAY.slice(0,7);const inM=d=>d&&d.slice(0,7)===m;
+  const closed=D.issues.filter(i=>i.status==='closed'&&inM(i.closeDate));const opened=D.issues.filter(i=>inM(i.openDate));
+  const still=openIssues().map(i=>Object.assign({age:i.openDate?diff(i.openDate,TODAY):null},i)).sort((a,b)=>(b.age||0)-(a.age||0));
+  const avg=closed.length?Math.round(closed.reduce((a,i)=>a+(i.openDate?diff(i.openDate,i.closeDate):0),0)/closed.length):0;
+  const ships=D.shipments.filter(s=>s.stage>=7&&inM(s.etaActual||(lastLog(s)||{}).d));
+  const tbl=(h,rows)=>`<div class="tw"><table><thead><tr>${h.map(x=>`<th class="${x[1]||''}">${x[0]}</th>`).join('')}</tr></thead><tbody>${rows||`<tr><td colspan="${h.length}" class="muted">${t('r_none')}</td></tr>`}</tbody></table></div>`;
+  return `<div class="ph"><div><h2>${t('nav_report')}</h2></div><div class="right"><input type="month" id="monthPick" value="${m}" class="sel" aria-label="${t('r_month')}"></div></div>`+
+  `<div class="kpis"><div class="kpi"><div class="kic" style="background:var(--ok-soft)"><svg style="stroke:var(--ok)"><use href="#i-check"/></svg></div><div><b>${closed.length}</b><span>${t('r_closed')}</span></div></div><div class="kpi"><div class="kic" style="background:var(--blue-soft)"><svg style="stroke:var(--blue)"><use href="#i-open"/></svg></div><div><b>${opened.length}</b><span>${t('r_opened')}</span></div></div><div class="kpi"><div class="kic" style="background:var(--brand-soft)"><svg style="stroke:var(--brand-deep)"><use href="#i-cal"/></svg></div><div><b>${avg}</b><span>${t('r_avg')}</span></div></div><div class="kpi"><div class="kic" style="background:var(--warn-soft)"><svg style="stroke:var(--warn)"><use href="#i-alert"/></svg></div><div><b>${still.length}</b><span>${t('r_still')}</span></div></div></div>`+
+  `<div class="card"><h3>${t('r_closed')}</h3>${tbl([[t('f_cat')],[t('nav_open')],[t('f_opened')],[t('f_closed')],[t('r_days'),'n'],[t('f_reason')]],closed.map(i=>`<tr><td>${pchip(i.project)}</td><td><a href="#/issue/${i.id}"><b>${esc(i.topic)}</b></a></td><td>${fd(i.openDate)}</td><td>${fd(i.closeDate)}</td><td class="n">${i.openDate?diff(i.openDate,i.closeDate):'—'}</td><td>${esc(i.closeReason||'')}</td></tr>`).join(''))}</div>`+
+  `<div class="card"><h3>${t('r_still')}</h3>${tbl([[t('f_cat')],[t('nav_open')],[t('f_opened')],[t('r_age'),'n']],still.map(i=>`<tr><td>${pchip(i.project)}</td><td><a href="#/issue/${i.id}"><b>${esc(i.topic)}</b></a></td><td>${fd(i.openDate)}</td><td class="n ${i.age>30?'late':''}">${i.age??'—'}</td></tr>`).join(''))}</div>`+
+  `<div class="card"><h3>${t('r_ships')}</h3>${tbl([[t('nav_ship')],[t('f_etd')],[t('f_eta')],[t('r_transit'),'n'],[t('r_delay'),'n']],ships.map(s=>`<tr><td><a href="#/shipment/${s.id}"><b>${esc(s.title)}</b></a></td><td>${fd(s.etdActual||s.etdPlan)}</td><td>${fd(s.etaActual)}</td><td class="n">${s.etdActual&&s.etaActual?diff(s.etdActual,s.etaActual):'—'}</td><td class="n">${shipLate(s)||0}</td></tr>`).join(''))}</div>`;
+}
+function vMe(){
+  const ag=agenda();const grp=g=>{const l=ag.filter(a=>a.g===g);return `<div class="card"><h3>${t('me_'+g)} <span class="chip gray">${l.length}</span></h3>${l.length?l.map(a=>`<a class="oi" href="${a.href}"><div class="stripe" style="background:${a.sev==='bad'?'var(--bad)':a.sev==='warn'?'var(--warn)':'var(--slate)'}"></div><div><div class="t">${esc(a.text)}</div>${a.sub?`<div class="l">${esc(a.sub)}</div>`:''}</div><div class="r"></div></a>`).join(''):empty(t('nothing'))}</div>`};
+  return `<div class="ph"><div><h2>${t('nav_me')}</h2><p>${fdw(TODAY)} · ${t('only_you')}</p></div></div>`+grp('confirm')+grp('due')+grp('prepare');
+}
+function vUpdate(){
+  const cnt=[['nav_open',D.issues.length],['nav_ship',D.shipments.length],['nav_out',D.outbound.length],['sub_qa',D.qa.length],['sub_plan',D.plans.length],['nav_docs',D.docs.length]];
+  return `<div class="ph"><div><h2>${t('up_title')}</h2><p>${t('only_you')}</p></div></div><div class="card"><p style="max-width:70ch">${t('up_txt')}</p><div class="facts" style="margin-top:16px"><div class="fact"><span>${t('up_last')}</span><b>${fd(D.updated)}</b></div>${cnt.map(([k,n])=>`<div class="fact"><span>${t(k)}</span><b>${n}</b></div>`).join('')}</div></div>`;
+}
+
+/* ---------------- render ---------------- */
+const S={openTab:'all',planId:null,qaId:null,chartStage:null,gridAll:false,showTsmt:false,calMonth:null,month:null};
+function render(){
+  const r=route();renderSide();
+  if((r.v==='me'||r.v==='update')&&!OWNER){location.hash='#/open/all';return}
+  const map={open:()=>vOpen(r.a),issue:()=>vIssue(r.a),ship:()=>vShip(r.a),shipment:()=>vShipment(r.a),out:()=>vOut(r.a),outbound:()=>vOutbound(r.a),prod:()=>r.a==='qa'?vProdQA():r.a==='plan'?vProdPlan():vProdOverview(),cal:vCal,docs:()=>vDocs(r.a),report:vReport,me:vMe,update:vUpdate};
+  const v=document.getElementById('view');v.innerHTML=(map[r.v]||map.open)();
+  v.style.animation='none';void v.offsetWidth;v.style.animation='';
+  document.documentElement.lang=lang==='zh'?'zh-Hant':lang;document.body.classList.remove('menu');
+}
+window.addEventListener('hashchange',()=>{render();window.scrollTo(0,0)});
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-lang],[data-tab],[data-plan],[data-qa],[data-act],[data-cal]');if(!b)return;
+  if(b.dataset.lang){lang=b.dataset.lang;try{localStorage.setItem('tsmt_lang',lang)}catch(x){}}
+  else if(b.dataset.tab)S.openTab=b.dataset.tab;
+  else if(b.dataset.plan)S.planId=b.dataset.plan;
+  else if(b.dataset.qa)S.qaId=b.dataset.qa;
+  else if(b.dataset.act==='gridAll')S.gridAll=!S.gridAll;
+  else if(b.dataset.act==='showTsmt')S.showTsmt=!S.showTsmt;
+  else if(b.dataset.cal!=null){const c=+b.dataset.cal;if(!c)S.calMonth=TODAY.slice(0,7);else{const [y,m]=(S.calMonth||TODAY.slice(0,7)).split('-').map(Number);const d=new Date(y,m-1+c,1);S.calMonth=d.getFullYear()+'-'+pad(d.getMonth()+1)}}
+  render();
+});
+document.addEventListener('change',e=>{if(e.target.id==='stageSel'){S.chartStage=e.target.value;render()}else if(e.target.id==='monthPick'){S.month=e.target.value;render()}});
+document.getElementById('ham').addEventListener('click',()=>document.body.classList.toggle('menu'));
+document.getElementById('scrim').addEventListener('click',()=>document.body.classList.remove('menu'));
+if(!location.hash)history.replaceState(null,'','#/open/all');
+render();
+};
+if(window.TSMT_DATA)window.TSMT_APP();
+</script>
+</body>
+</html>
