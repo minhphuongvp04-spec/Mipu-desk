@@ -234,6 +234,37 @@ td.late,.late{color:var(--bad);font-weight:600}
 .calg .cd.off{background:#F8F9F7}
 .calg .cd b{font-size:12.5px}
 .calg .ev{font-size:11.5px;border-radius:6px;padding:1px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* owner editing */
+.btn.sm{padding:5px 11px;font-size:12.5px;border-radius:8px}
+.btn.danger{color:var(--bad);border-color:#F2C9C9}
+.card h3 .btn.sm{margin-left:10px}
+#edlg{border:0;border-radius:18px;padding:0;width:min(720px,calc(100vw - 32px));max-height:calc(100vh - 48px);box-shadow:0 30px 80px -20px rgba(20,32,22,.35);font-family:var(--font);color:var(--ink)}
+#edlg::backdrop{background:rgba(22,37,27,.35);backdrop-filter:blur(2px)}
+.edf{padding:24px;display:flex;flex-direction:column;gap:18px}
+.edf h3{font-size:18px;font-weight:700;letter-spacing:-.02em}
+.edgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px 14px}
+.edgrid label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted);font-weight:500}
+.edgrid label.wide{grid-column:1/-1}
+.edgrid input,.edgrid select,.edgrid textarea,.logf input,.blkf input,.blkf select,.tokf input{font:inherit;font-size:14px;color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:8px 10px;background:#fff;min-width:0}
+.edgrid input:focus,.edgrid select:focus,.edgrid textarea:focus,.logf input:focus,.blkf input:focus,.tokf input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+.edact{display:flex;gap:8px;align-items:center}
+.logf,.blkf,.tokf{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.logf input[type=text],.blkf input[type=text],.tokf input{flex:1 1 220px}
+.blkf{background:var(--card);border:1px dashed var(--line);border-radius:var(--r-md);padding:12px;margin:0}
+.tli{position:relative}
+.xdel{position:absolute;right:0;top:0;border:0;background:none;color:var(--muted);font-size:18px;line-height:1;padding:2px 6px;border-radius:6px;opacity:0;transition:opacity .15s}
+.tli:hover .xdel,.blocker:hover .xdel{opacity:1}
+.xdel:hover{background:var(--bad-soft);color:var(--bad)}
+.blocker{position:relative}
+.bact{margin-left:auto;display:flex;gap:6px;align-items:center}
+.bact .xdel{position:static}
+.edstp{cursor:pointer}
+.edstp:hover .dot{box-shadow:0 0 0 5px var(--brand-soft)}
+#savebar{position:fixed;left:50%;bottom:20px;transform:translate(-50%,140%);background:#16251B;color:#fff;border-radius:14px;padding:10px 10px 10px 18px;display:flex;gap:10px;align-items:center;font-size:13.5px;box-shadow:0 18px 40px -12px rgba(0,0,0,.35);z-index:50;transition:transform .25s;max-width:calc(100vw - 32px)}
+#savebar.show{transform:translate(-50%,0)}
+#savebar .btn{background:rgba(255,255,255,.1);border-color:transparent;color:#fff}
+#savebar .btn.pri{background:var(--brand);color:#fff}
+@media (max-width:900px){#savebar{bottom:84px}.edgrid{grid-template-columns:1fr}}
 /* bottom nav (mobile) */
 .bnav{display:none}
 .scrim{display:none}
@@ -329,14 +360,14 @@ td.late,.late{color:var(--bad);font-weight:600}
 </div>
 <script>
 (()=>{
-const META={"salt":"CixIOfU8Zkioe1mWVxT9NA==","iter":310000,"v":"20261120153340"};
+const META={"salt":"CixIOfU8Zkioe1mWVxT9NA==","iter":310000,"v":"20261120154703","repo":"minhphuongvp04-spec/Mipu-desk"};
 const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
 const tob64=u=>{let s='';u.forEach(b=>s+=String.fromCharCode(b));return btoa(s)};
 const $=id=>document.getElementById(id);
 let K=null;
 async function keysFrom(bits){
-  const enc=await crypto.subtle.importKey('raw',bits.slice(0,32),'AES-CBC',false,['decrypt']);
-  const mac=await crypto.subtle.importKey('raw',bits.slice(32,64),{name:'HMAC',hash:'SHA-256'},false,['verify']);
+  const enc=await crypto.subtle.importKey('raw',bits.slice(0,32),'AES-CBC',false,['encrypt','decrypt']);
+  const mac=await crypto.subtle.importKey('raw',bits.slice(32,64),{name:'HMAC',hash:'SHA-256'},false,['sign','verify']);
   return {enc,mac};
 }
 async function derive(pw){
@@ -351,13 +382,43 @@ async function dec(buf,k){
 }
 async function get(p){const r=await fetch(p+'?v='+META.v,{cache:'no-cache'});if(!r.ok)throw new Error('net');return r.arrayBuffer()}
 function forget(){try{sessionStorage.removeItem('tsmt_k');localStorage.removeItem('tsmt_k')}catch(e){}}
+const revOf=s=>+((s.match(/"rev":\s*(\d+)/)||[0,0])[1]);
+async function encB(plain,k){
+  const iv=crypto.getRandomValues(new Uint8Array(16));
+  const ct=new Uint8Array(await crypto.subtle.encrypt({name:'AES-CBC',iv},k.enc,plain));
+  const body=new Uint8Array(16+ct.length);body.set(iv);body.set(ct,16);
+  const tag=new Uint8Array(await crypto.subtle.sign('HMAC',k.mac,body));
+  const out=new Uint8Array(body.length+32);out.set(body);out.set(tag,body.length);return out;
+}
+const tok=()=>{try{return localStorage.getItem('tsmt_gh')||''}catch(e){return ''}};
+async function api(p,o){
+  const r=await fetch('https://api.github.com/repos/'+META.repo+p,Object.assign({cache:'no-store'},o||{},{headers:{Authorization:'Bearer '+tok(),Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}}));
+  if(!r.ok){let m='';try{m=(await r.json()).message||''}catch(e){}throw new Error(r.status+(m?' '+m:''))}
+  return r.json();
+}
+window.TSMT_STORE={
+  repo:META.repo,
+  hasToken:()=>!!tok(),
+  clear(){try{localStorage.removeItem('tsmt_gh')}catch(e){}},
+  async setToken(v){const old=tok();try{localStorage.setItem('tsmt_gh',v)}catch(e){}try{const j=await api('');if(!j.permissions||!j.permissions.push)throw new Error('no write access');}catch(e){try{if(old)localStorage.setItem('tsmt_gh',old);else localStorage.removeItem('tsmt_gh')}catch(x){}throw e}},
+  async save(text,baseRev){
+    const cur=await api('/contents/data.enc?ref=main');
+    const remote=new TextDecoder().decode(await dec(b64(cur.content.replace(/\s/g,'')).buffer,K));
+    if(revOf(remote)>baseRev)throw new Error('conflict');
+    const enc=await encB(new TextEncoder().encode(text),K);
+    await api('/contents/data.enc',{method:'PUT',body:JSON.stringify({message:'Web edit '+new Date().toISOString().slice(0,16).replace('T',' '),content:tob64(enc),sha:cur.sha,branch:'main'})});
+    try{sessionStorage.setItem('tsmt_pending',text)}catch(e){}
+  }
+};
 async function unlock(bits,remember){
   const k=await keysFrom(bits);
   const data=await dec(await get('data.enc'),k);
   K=k;
   const s=tob64(bits)+'|'+META.salt;
   try{sessionStorage.setItem('tsmt_k',s);if(remember)localStorage.setItem('tsmt_k',s)}catch(e){}
-  (new Function(new TextDecoder().decode(data)))();
+  let text=new TextDecoder().decode(data);
+  try{const p=sessionStorage.getItem('tsmt_pending');if(p&&revOf(p)>revOf(text))text=p;else sessionStorage.removeItem('tsmt_pending')}catch(e){}
+  (new Function(text))();
   $('gate').remove();
   window.TSMT_APP();
 }
@@ -367,7 +428,7 @@ function saved(){
 }
 function showForm(msg){$('gate').style.display='flex';$('gateErr').textContent=msg||'';$('gatePw').focus()}
 async function start(){
-  if(/[?&]lock=1/.test(location.search)){forget();history.replaceState(null,'',location.pathname+location.hash)}
+  if(/[?&]lock=1/.test(location.search)){forget();const q=location.search.replace(/([?&])lock=1(&|$)/,(m,a,b)=>b?a:'').replace(/[?&]$/,'');history.replaceState(null,'',location.pathname+q+location.hash)}
   if(!window.crypto||!crypto.subtle){showForm('This browser cannot open the site. Use Chrome or Edge over https.');return}
   const b=saved();
   if(b){try{await unlock(b,false);return}catch(e){if(e.message==='net'){showForm('Cannot reach the site. Check the connection and reload.');return}forget()}}
@@ -690,7 +751,7 @@ function vIssue(id){
   const lg=sortLog(i.log);
   return crumb([[t('nav_open'),'#/open/all'],[p?p.name:t('sub_all'),p?'#/open/'+p.key:'#/open/all'],[iTxt(i)]])+
   `<div class="dhead"><div class="dthumb" style="background:${p?p.soft:'#EEF0F4'}"><svg style="stroke:${p?p.c:'#7C88A0'}"><use href="#${p?p.icon:'i-open'}"/></svg></div><div><div class="chips" style="margin-bottom:6px">${pchip(i.project)}<span class="chip ${i.priority==='high'?'bad':i.priority==='low'?'gray':'warn'}">${t('f_prio')}: ${t('p_'+(i.priority||'med'))}</span></div><h2 class="ititle">${iTitle(i)}</h2></div><div>${dueChip(i)}</div></div>`+
-  `<div class="cols2"><div class="stack"><div class="card"><h3>${t('log')}</h3><div class="tl">${lg.map(x=>`<div class="tli"><div class="dt"><i></i></div><div><div class="when">${fdw(x.d)}</div><div class="what">${esc(x.text)}</div></div></div>`).join('')||`<div class="muted">${t('nothing')}</div>`}</div></div></div>
+  `<div class="cols2"><div class="stack"><div class="card logcard"><h3>${t('log')}</h3><div class="tl">${lg.map(x=>`<div class="tli"><div class="dt"><i></i></div><div><div class="when">${fdw(x.d)}</div><div class="what">${esc(x.text)}</div></div></div>`).join('')||`<div class="muted">${t('nothing')}</div>`}</div></div></div>
   <div class="stack"><div class="card"><div class="facts" style="grid-template-columns:1fr 1fr"><div class="fact"><span>${t('f_status')}</span><b>${t('s_'+i.status)}</b></div><div class="fact"><span>${t('f_cat')}</span><b>${t('c_'+(i.category||'other'))}</b></div><div class="fact"><span>${t('f_opened')}</span><b>${fd(i.openDate)}</b></div><div class="fact"><span>${t('f_due')}</span><b class="${isOverdue(i)?'late':''}">${fd(i.dueDate)}</b></div>${i.closeDate?`<div class="fact"><span>${t('f_closed')}</span><b>${fd(i.closeDate)}</b></div>`:''}</div><div class="fact" style="margin-top:12px"><span>${t('f_owners')}</span><b style="font-weight:500">${esc(i.owners||'—')}</b></div>${i.closeReason?`<div class="fact" style="margin-top:12px"><span>${t('f_reason')}</span><b style="font-weight:500">${esc(i.closeReason)}</b></div>`:''}</div>
   <div class="card"><h3>${t('viewers_see')}</h3><div class="ask">${ic('i-msg')}${t('ask_ph')}</div><div class="muted" style="font-size:12.5px;margin-top:8px">${t('ask_note')}</div></div></div></div>`;
 }
@@ -740,8 +801,8 @@ function vShipment(id){
     <div class="fact"><span>${t('f_eta')}</span><b class="${late?'late':''}">${fd(s.etaPlan)} / ${fd(s.etaActual)}</b></div>
     ${s.category==='material'?`<div class="fact"><span>${t('f_ready')}</span><b>${fd(s.readyDate)}</b></div>`:''}
   </div></div>
-  ${(s.blockers||[]).map(b=>`<div class="blocker ${b.done?'done':''}"><div class="ic">${ic(b.done?'i-check':'i-alert')}</div><div><b>${esc(t('b_'+b.group))}</b> <span class="muted">· ${b.done?t('resolved'):t('open_days',{n:b.since?diff(b.since,TODAY):0})}</span><div style="font-size:13.5px;margin-top:2px">${esc(b.detail)}</div></div></div>`).join('')}
-  <div class="card"><h3>${t('log')}</h3><div class="tl">${lg.map(x=>`<div class="tli"><div class="dt"><i></i></div><div><div class="when">${fdw(x.d)}</div><div class="what">${esc(x.text)}</div></div></div>`).join('')||`<div class="muted">${t('nothing')}</div>`}</div></div></div>
+  ${(s.blockers||[]).map((b,bi)=>`<div class="blocker ${b.done?'done':''}" data-bi="${bi}"><div class="ic">${ic(b.done?'i-check':'i-alert')}</div><div><b>${esc(t('b_'+b.group))}</b> <span class="muted">· ${b.done?t('resolved'):t('open_days',{n:b.since?diff(b.since,TODAY):0})}</span><div style="font-size:13.5px;margin-top:2px">${esc(b.detail)}</div></div></div>`).join('')}
+  <div class="card logcard"><h3>${t('log')}</h3><div class="tl">${lg.map(x=>`<div class="tli"><div class="dt"><i></i></div><div><div class="when">${fdw(x.d)}</div><div class="what">${esc(x.text)}</div></div></div>`).join('')||`<div class="muted">${t('nothing')}</div>`}</div></div></div>
   <div class="stack"><div class="card"><h3>${t('docs_att')}</h3>${docs.length?docs.map(docRow).join(''):`<div class="muted" style="font-size:13px">${t('docs_none')}</div>`}</div>
   <div class="card"><h3>${t('viewers_see')}</h3><div class="ask">${ic('i-msg')}${t('ask_ph')}</div><div class="muted" style="font-size:12.5px;margin-top:8px">${t('ask_note')}</div></div></div></div>`;
 }
@@ -756,7 +817,7 @@ function vOutbound(id){
   `<div class="dhead"><div class="dthumb" style="background:${pr.soft}"><svg style="stroke:${pr.c}"><use href="#${pr.icon}"/></svg></div><div><div class="chips" style="margin-bottom:6px">${pchip(o.project)}${o.lot?`<span class="chip gray">${esc(o.lot)}</span>`:''}${late?`<span class="chip bad">${t('late_d',{n:late})}</span>`:''}</div><h2>${esc(o.customer)} · ${esc(o.model)}</h2><div class="route">TSMT <svg viewBox="0 0 34 10"><use href="#i-arrow" stroke="#7C88A0" fill="none" stroke-width="1.6"/></svg> ${esc(o.dest||'?')}${o.mode?' · '+esc(o.mode):''}</div></div><div></div></div>`+stepper(OB,o.stage??-1,'ob_',dates)+
   `<div class="cols2"><div class="stack"><div class="card"><h3>${t('lot_info')}</h3><div class="facts"><div class="fact"><span>${t('f_qty')}</span><b>${num(o.qty)} pcs</b></div><div class="fact"><span>${t('f_shipplan')}</span><b class="${late?'late':''}">${fd(o.shipPlan)}</b></div><div class="fact"><span>${t('f_shipact')}</span><b>${fd(o.shipActual)}</b></div><div class="fact"><span>ETA</span><b>${fd(o.eta)}</b></div><div class="fact"><span>${t('f_dest')}</span><b>${esc(o.dest||t('not_set'))}</b></div><div class="fact"><span>${t('f_mode')}</span><b>${esc(o.mode||t('not_set'))}</b></div></div></div>
   ${o.issue?`<div class="blocker"><div class="ic">${ic('i-alert')}</div><div><b>${t('f_issue')}</b><div style="font-size:13.5px;margin-top:2px">${esc(o.issue)}</div></div></div>`:''}
-  <div class="card"><h3>${t('log')}</h3><div class="tl">${lg.map(x=>`<div class="tli"><div class="dt"><i></i></div><div><div class="when">${fdw(x.d)}</div><div class="what">${esc(x.text)}</div></div></div>`).join('')}</div></div></div>
+  <div class="card logcard"><h3>${t('log')}</h3><div class="tl">${lg.map(x=>`<div class="tli"><div class="dt"><i></i></div><div><div class="when">${fdw(x.d)}</div><div class="what">${esc(x.text)}</div></div></div>`).join('')}</div></div></div>
   <div class="stack"><div class="card"><h3>${t('viewers_see')}</h3><div class="ask">${ic('i-msg')}${t('ask_ph')}</div><div class="muted" style="font-size:12.5px;margin-top:8px">${t('ask_note')}</div></div></div></div>`;
 }
 
@@ -857,8 +918,112 @@ function vMe(){
 }
 function vUpdate(){
   const cnt=[['nav_open',D.issues.length],['nav_ship',D.shipments.length],['nav_out',D.outbound.length],['sub_qa',D.qa.length],['sub_plan',D.plans.length],['nav_docs',D.docs.length]];
-  return `<div class="ph"><div><h2>${t('up_title')}</h2><p>${t('only_you')}</p></div></div><div class="card"><p style="max-width:70ch">${t('up_txt')}</p><div class="facts" style="margin-top:16px"><div class="fact"><span>${t('up_last')}</span><b>${fd(D.updated)}</b></div>${cnt.map(([k,n])=>`<div class="fact"><span>${t(k)}</span><b>${n}</b></div>`).join('')}</div></div>`;
+  return `<div class="ph"><div><h2>${t('up_title')}</h2><p>${t('only_you')}</p></div></div><div class="card"><p style="max-width:70ch">${t('up_txt')}</p><div class="facts" style="margin-top:16px"><div class="fact"><span>${t('up_last')}</span><b>${fd(D.updated)}</b></div>${cnt.map(([k,n])=>`<div class="fact"><span>${t(k)}</span><b>${n}</b></div>`).join('')}</div></div>`+vSetup();
 }
+
+/* ---------------- owner editing ---------------- */
+Object.assign(L.en,{ed_edit:'Edit',ed_new_issue:'New item',ed_new_ship:'New shipment',ed_new_out:'New shipment',ed_upd_ph:'What changed?',ed_add:'Add',ed_save:'Save & publish',ed_discard:'Discard',ed_unsaved:'{n} unsaved change(s)',ed_saving:'Publishing…',ed_saved:'Published. Viewers see it in about 1–2 minutes.',ed_err:'Could not publish: {e}',ed_conflict:'The site has a newer version. Reload the page, then make your change again.',ed_notoken:'Set up web editing first: Owner settings → GitHub token.',ed_cancel:'Cancel',ed_apply:'Apply',ed_delete:'Delete',ed_del_q:'Delete this item?',ed_del_log:'Delete this update?',ed_add_blk:'Add blocker',ed_blk_ph:'Detail, e.g. waiting CO from supplier',ed_req:'Please fill in: {f}',ed_local:'Local preview: changes download as data.js instead of publishing.',ed_setup:'Web editing',ed_setup_txt:'Paste a GitHub access token for the Mipu-desk repo (permission: Contents, read and write). It is kept only in this browser.',ed_token:'GitHub token',ed_token_save:'Save and test',ed_token_rm:'Remove from this browser',ed_token_ok:'Connected. You can edit and publish from this browser.',ed_token_bad:'Token did not work: {e}',ed_token_none:'No token on this browser yet.',ed_testing:'Testing…',ed_resolve:'Mark resolved',ed_reopen:'Reopen',ed_leave:'You have unpublished changes.',ed_step_hint:'Owner: click a step to set the stage.',
+f_topic:'Issue',f_title:'Title',f_project:'Project',f_from:'From',f_to:'To',f_model:'Model',f_customer:'Customer',f_stage:'Stage',f_etdp:'ETD plan',f_etda:'ETD actual',f_etap:'ETA plan',f_etaa:'ETA actual',f_obeta:'ETA',f_kind:'Type',f_group:'Blocker type'});
+Object.assign(L.vi,{ed_edit:'Sửa',ed_new_issue:'Thêm mục mới',ed_new_ship:'Thêm lô hàng',ed_new_out:'Thêm lô hàng',ed_upd_ph:'Có gì mới?',ed_add:'Thêm',ed_save:'Lưu và đưa lên',ed_discard:'Bỏ thay đổi',ed_unsaved:'{n} thay đổi chưa lưu',ed_saving:'Đang đưa lên…',ed_saved:'Đã đưa lên. Khoảng 1–2 phút nữa người xem sẽ thấy.',ed_err:'Không đưa lên được: {e}',ed_conflict:'Web đã có bản mới hơn. Tải lại trang rồi sửa lại nhé.',ed_notoken:'Cần cài đặt sửa trên web trước: Cài đặt của chủ → GitHub token.',ed_cancel:'Hủy',ed_apply:'Xong',ed_delete:'Xóa',ed_del_q:'Xóa mục này?',ed_del_log:'Xóa dòng cập nhật này?',ed_add_blk:'Thêm vướng mắc',ed_blk_ph:'Chi tiết, ví dụ: chờ CO từ nhà cung cấp',ed_req:'Cần điền: {f}',ed_local:'Bản xem trên máy: bấm lưu sẽ tải file data.js về thay vì đưa lên.',ed_setup:'Sửa trên web',ed_setup_txt:'Dán GitHub token của repo Mipu-desk (quyền Contents: Read and write). Token chỉ lưu trong trình duyệt này.',ed_token:'GitHub token',ed_token_save:'Lưu và kiểm tra',ed_token_rm:'Xóa khỏi trình duyệt này',ed_token_ok:'Đã kết nối. Bạn có thể sửa và đưa lên từ trình duyệt này.',ed_token_bad:'Token không dùng được: {e}',ed_token_none:'Trình duyệt này chưa có token.',ed_testing:'Đang kiểm tra…',ed_resolve:'Đã xong',ed_reopen:'Mở lại',ed_leave:'Bạn còn thay đổi chưa đưa lên.',ed_step_hint:'Bấm vào một bước để đổi trạng thái.',
+f_topic:'Vấn đề',f_title:'Tên lô hàng',f_project:'Dự án',f_from:'Gửi từ',f_to:'Gửi đến',f_model:'Model',f_customer:'Khách hàng',f_stage:'Trạng thái',f_etdp:'ETD dự kiến',f_etda:'ETD thực tế',f_etap:'ETA dự kiến',f_etaa:'ETA thực tế',f_obeta:'ETA',f_kind:'Loại',f_group:'Loại vướng mắc',f_lot:'Lô',f_status:'Trạng thái',f_prio:'Ưu tiên',f_cat:'Nhóm',f_opened:'Ngày mở',f_due:'Hạn',f_closed:'Ngày đóng',f_owners:'Người phụ trách',f_reason:'Lý do đóng'});
+const ED={dirty:0,msg:'',busy:false};
+const PROJVALS=()=>PROJ.map(p=>p.name+' ('+p.customer+')');
+const FORMS={
+  issue:{list:'issues',f:[['lot','f_lot','text'],['topic','f_topic','text',1],['project','f_project','proj'],['status','f_status','sel',['open','progress','closed'],v=>t('s_'+v)],['priority','f_prio','sel',['high','med','low'],v=>t('p_'+v)],['category','f_cat','sel',['shipment','material','production','quality','equipment','docs','other'],v=>t('c_'+v)],['openDate','f_opened','date'],['dueDate','f_due','date'],['closeDate','f_closed','date'],['owners','f_owners','text',0,1],['closeReason','f_reason','area',0,1]],
+    def:()=>({status:'open',priority:'med',category:'other',openDate:TODAY,dueDate:'',log:[]}),href:x=>'#/issue/'+x.id},
+  shipment:{list:'shipments',f:[['title','f_title','text',1,1],['project','f_project','proj'],['lot','f_lot','text'],['category','f_kind','sel',['material','equipment','replenish','sample','return','other'],v=>t('k_'+v)],['from','f_from','text'],['to','f_to','text'],['stage','f_stage','sel',[-1,0,1,2,3,4,5,6,7],v=>v<0?t('st_none'):t('st_'+STEPS[v])],['qty','f_qty','num'],['process','f_process','text'],['terms','f_terms','text'],['costBearer','f_cost','text'],['owner','f_owner','text'],['po','f_po','text'],['invoice','f_inv','text'],['mode','f_mode','text'],['readyDate','f_ready','date'],['etdPlan','f_etdp','date'],['etdActual','f_etda','date'],['etaPlan','f_etap','date'],['etaActual','f_etaa','date']],
+    def:()=>({category:'material',stage:-1,from:"ARC's suppliers",to:'TSMT India',blockers:[],log:[]}),href:x=>'#/shipment/'+x.id},
+  outbound:{list:'outbound',f:[['model','f_model','text',1],['customer','f_customer','text'],['project','f_project','proj'],['lot','f_lot','text'],['qty','f_qty','num'],['stage','f_stage','sel',[0,1,2,3,4,5],v=>t('ob_'+OB[v])],['shipPlan','f_shipplan','date'],['shipActual','f_shipact','date'],['eta','f_obeta','date'],['dest','f_dest','text'],['mode','f_mode','text'],['issue','f_issue','area',0,1]],
+    def:()=>({stage:0,log:[]}),href:x=>'#/outbound/'+x.id}
+};
+const BGROUPS=['docs','confirm','approval','license','customs','payment','other'];
+const findItem=(type,id)=>(D[FORMS[type].list]||[]).find(x=>x.id===id);
+function touch(){ED.dirty++;ED.msg='';D.updated=TODAY;render()}
+function saveBar(){
+  let el=document.getElementById('savebar');if(!el){el=document.createElement('div');el.id='savebar';document.body.appendChild(el)}
+  if(!OWNER||(!ED.dirty&&!ED.msg)){el.className='';el.innerHTML='';return}
+  el.className='show';
+  el.innerHTML=ED.dirty?`<span>${esc(ED.busy?t('ed_saving'):ED.msg||t('ed_unsaved',{n:ED.dirty}))}</span>${ED.busy?'':`<button class="btn" data-ed="discard">${t('ed_discard')}</button><button class="btn pri" data-ed="publish">${t('ed_save')}</button>`}`:`<span>${esc(ED.msg)}</span><button class="btn" data-ed="hidemsg">OK</button>`;
+}
+function dataText(rev){return 'window.TSMT_DATA = '+JSON.stringify(Object.assign({},D,{rev}),null,1)+';\n'}
+async function publish(){
+  const rev=(+D.rev||0)+1;const txt=dataText(rev);
+  if(!window.TSMT_STORE){const u=URL.createObjectURL(new Blob([txt],{type:'text/javascript'}));const a=document.createElement('a');a.href=u;a.download='data.js';document.body.appendChild(a);a.click();a.remove();ED.msg=t('ed_local');saveBar();return}
+  if(!TSMT_STORE.hasToken()){ED.msg=t('ed_notoken');saveBar();return}
+  ED.busy=true;saveBar();
+  try{await TSMT_STORE.save(txt,+D.rev||0);D.rev=rev;ED.dirty=0;ED.msg=t('ed_saved')}
+  catch(e){ED.msg=e.message==='conflict'?t('ed_conflict'):t('ed_err',{e:e.message})}
+  ED.busy=false;render();
+}
+function fieldHtml(f,it){
+  const [k,lab,ty,req,wide,]=f;const opts=f[3]&&Array.isArray(f[3])?f[3]:null;const v=it[k]??'';
+  let inp;
+  if(ty==='sel'){const o=f[3];const fmt=f[4];inp=`<select name="${k}">${o.map(x=>`<option value="${x}" ${String(x)===String(v)?'selected':''}>${esc(fmt(x))}</option>`).join('')}</select>`;return `<label>${t(lab)}${inp}</label>`}
+  if(ty==='proj'){const vals=PROJVALS();const cur=projOf(v);inp=`<select name="${k}">${vals.map(x=>`<option ${cur&&projOf(x)===cur?'selected':''}>${esc(x)}</option>`).join('')}<option value="" ${!cur?'selected':''}>—</option></select>`}
+  else if(ty==='area')inp=`<textarea name="${k}" rows="3">${esc(v)}</textarea>`;
+  else inp=`<input name="${k}" type="${ty==='num'?'number':ty==='date'?'date':'text'}" value="${esc(v)}" ${req===1?'required':''}>`;
+  return `<label class="${wide===1||ty==='area'?'wide':''}">${t(lab)}${req===1?' *':''}${inp}</label>`;
+}
+function openForm(type,id){
+  const F=FORMS[type];const it=id?findItem(type,id):F.def();if(!it)return;
+  let dl=document.getElementById('edlg');if(!dl){dl=document.createElement('dialog');dl.id='edlg';document.body.appendChild(dl)}
+  dl.innerHTML=`<form method="dialog" class="edf" data-type="${type}" data-id="${id||''}"><h3>${id?t('ed_edit'):t(type==='issue'?'ed_new_issue':type==='shipment'?'ed_new_ship':'ed_new_out')}</h3><div class="edgrid">${F.f.map(f=>fieldHtml(f,it)).join('')}</div><div class="edact">${id?`<button type="button" class="btn danger" data-ed="del" data-type="${type}" data-id="${id}">${t('ed_delete')}</button>`:''}<span style="flex:1"></span><button type="button" class="btn" data-ed="close">${t('ed_cancel')}</button><button class="btn pri" value="ok">${t('ed_apply')}</button></div></form>`;
+  dl.showModal();
+}
+function applyForm(form){
+  const type=form.dataset.type,id=form.dataset.id;const F=FORMS[type];const fd_=new FormData(form);
+  const it=id?findItem(type,id):F.def();
+  F.f.forEach(([k,,ty])=>{let v=fd_.get(k);if(v==null)return;v=String(v).trim();if(ty==='num')v=v===''?null:+v;else if(ty==='sel'&&(k==='stage'))v=+v;it[k]=v});
+  if(type==='issue'&&it.status==='closed'&&!it.closeDate)it.closeDate=TODAY;
+  if(type==='issue'&&it.status!=='closed')it.closeDate='';
+  if(!id){it.id=type.slice(0,3)+'-'+Date.now().toString(36);D[F.list].push(it);touch();location.hash=F.href(it);return}
+  touch();
+}
+function ownerDecorate(r){
+  if(!OWNER)return;const v=document.getElementById('view');
+  const nb=(type,lab)=>`<button class="btn pri sm" data-ed="new" data-type="${type}">${ic('i-edit')}${t(lab)}</button>`;
+  if(r.v==='open'){const h=v.querySelector('.tabs');const c=h&&h.closest('.card');if(c)c.querySelector('h3').insertAdjacentHTML('beforeend',nb('issue','ed_new_issue'))}
+  if(r.v==='ship'||r.v==='out'){const ph=v.querySelector('.ph');if(ph)ph.insertAdjacentHTML('beforeend',`<div class="right">${nb(r.v==='ship'?'shipment':'outbound',r.v==='ship'?'ed_new_ship':'ed_new_out')}</div>`)}
+  const type={issue:'issue',shipment:'shipment',outbound:'outbound'}[r.v];if(!type)return;
+  const it=findItem(type,r.a);if(!it)return;
+  const dh=v.querySelector('.dhead > div:last-child');if(dh)dh.insertAdjacentHTML('beforeend',`<button class="btn" data-ed="edit" data-type="${type}" data-id="${it.id}">${ic('i-edit')}${t('ed_edit')}</button>`);
+  const lc=v.querySelector('.logcard');
+  if(lc){lc.querySelector('h3').insertAdjacentHTML('afterend',`<form class="logf" data-type="${type}" data-id="${it.id}"><input type="date" name="d" value="${TODAY}" aria-label="Date"><input type="text" name="text" placeholder="${esc(t('ed_upd_ph'))}" required><button class="btn pri">${t('ed_add')}</button></form>`);
+    const sorted=sortLog(it.log);lc.querySelectorAll('.tli').forEach((el,i)=>{const li=(it.log||[]).indexOf(sorted[i]);el.insertAdjacentHTML('beforeend',`<button class="xdel" title="${esc(t('ed_delete'))}" data-ed="dellog" data-type="${type}" data-id="${it.id}" data-li="${li}">×</button>`)})}
+  if(type!=='issue'){const stp=v.querySelectorAll('.stp');stp.forEach((el,i)=>{el.classList.add('edstp');el.dataset.ed='stage';el.dataset.type=type;el.dataset.id=it.id;el.dataset.si=i;el.title=t('ed_step_hint')})}
+  if(type==='shipment'){
+    v.querySelectorAll('.blocker[data-bi]').forEach(el=>{const bi=+el.dataset.bi;const b=it.blockers[bi];el.insertAdjacentHTML('beforeend',`<div class="bact"><button class="btn sm" data-ed="blk" data-id="${it.id}" data-bi="${bi}">${b.done?t('ed_reopen'):t('ed_resolve')}</button><button class="xdel" data-ed="delblk" data-id="${it.id}" data-bi="${bi}">×</button></div>`)});
+    const first=v.querySelector('.cols2 .stack > .card');if(first)first.insertAdjacentHTML('afterend',`<form class="blkf" data-id="${it.id}"><select name="group">${BGROUPS.map(g=>`<option value="${g}">${esc(t('b_'+g))}</option>`).join('')}</select><input type="text" name="detail" placeholder="${esc(t('ed_blk_ph'))}" required><button class="btn">${t('ed_add_blk')}</button></form>`);
+  }
+}
+function vSetup(){
+  const S_=window.TSMT_STORE;
+  const st=!S_?`<div class="muted">${t('ed_local')}</div>`:`<div class="muted" id="tokst">${S_.hasToken()?t('ed_token_ok'):t('ed_token_none')}</div>`;
+  return `<div class="card"><h3>${t('ed_setup')}</h3><p style="max-width:70ch;margin-bottom:12px">${t('ed_setup_txt')}</p>${S_?`<form class="tokf"><input type="password" name="tok" autocomplete="off" placeholder="github_pat_…" aria-label="${t('ed_token')}"><button class="btn pri">${t('ed_token_save')}</button>${S_.hasToken()?`<button type="button" class="btn" data-ed="tokrm">${t('ed_token_rm')}</button>`:''}</form>`:''}${st}</div>`;
+}
+document.addEventListener('click',e=>{
+  const b=e.target.closest('[data-ed]');if(!b||!OWNER)return;const a=b.dataset.ed,type=b.dataset.type,id=b.dataset.id;
+  if(a==='new')openForm(type,null);
+  else if(a==='edit')openForm(type,id);
+  else if(a==='close')document.getElementById('edlg').close();
+  else if(a==='del'){if(!confirm(t('ed_del_q')))return;const F=FORMS[type];D[F.list]=D[F.list].filter(x=>x.id!==id);document.getElementById('edlg').close();touch();location.hash=type==='issue'?'#/open/all':type==='shipment'?'#/ship/all':'#/out/all'}
+  else if(a==='dellog'){if(!confirm(t('ed_del_log')))return;const it=findItem(type,id);it.log.splice(+b.dataset.li,1);touch()}
+  else if(a==='stage'){const it=findItem(type,id);const i=+b.dataset.si;it.stage=(it.stage??-1)===i?i-1:i;if(type==='outbound'&&it.stage<0)it.stage=0;touch()}
+  else if(a==='blk'){const it=findItem('shipment',id);const bl=it.blockers[+b.dataset.bi];bl.done=!bl.done;touch()}
+  else if(a==='delblk'){const it=findItem('shipment',id);it.blockers.splice(+b.dataset.bi,1);touch()}
+  else if(a==='publish')publish();
+  else if(a==='discard'){ED.dirty=0;location.reload()}
+  else if(a==='hidemsg'){ED.msg='';saveBar()}
+  else if(a==='tokrm'){TSMT_STORE.clear();render()}
+});
+document.addEventListener('submit',async e=>{
+  const f=e.target;if(!OWNER)return;
+  if(f.classList.contains('edf')){if(e.submitter&&e.submitter.value!=='ok')return;const miss=[...f.querySelectorAll('[required]')].filter(x=>!x.value.trim());if(miss.length){e.preventDefault();alert(t('ed_req',{f:miss.map(x=>x.closest('label').firstChild.textContent).join(', ')}));return}applyForm(f);return}
+  if(f.classList.contains('logf')){e.preventDefault();const it=findItem(f.dataset.type,f.dataset.id);(it.log=it.log||[]).push({d:f.d.value||TODAY,text:f.text.value.trim()});touch();return}
+  if(f.classList.contains('blkf')){e.preventDefault();const it=findItem('shipment',f.dataset.id);(it.blockers=it.blockers||[]).push({group:f.group.value,detail:f.detail.value.trim(),done:false,since:TODAY});touch();return}
+  if(f.classList.contains('tokf')){e.preventDefault();const v=f.tok.value.trim();if(!v)return;const el=document.getElementById('tokst');el.textContent=t('ed_testing');try{await TSMT_STORE.setToken(v);el.textContent=t('ed_token_ok');setTimeout(render,1200)}catch(err){el.textContent=t('ed_token_bad',{e:err.message})}}
+});
+window.addEventListener('beforeunload',e=>{if(OWNER&&ED.dirty){e.preventDefault();e.returnValue=t('ed_leave')}});
 
 /* ---------------- render ---------------- */
 const S={openTab:'all',planId:null,qaId:null,chartStage:null,gridAll:false,showTsmt:false,calMonth:null,month:null};
@@ -866,7 +1031,7 @@ function render(){
   const r=route();renderSide();
   if((r.v==='me'||r.v==='update')&&!OWNER){location.hash='#/open/all';return}
   const map={open:()=>vOpen(r.a),issue:()=>vIssue(r.a),ship:()=>vShip(r.a),shipment:()=>vShipment(r.a),out:()=>vOut(r.a),outbound:()=>vOutbound(r.a),prod:()=>r.a==='qa'?vProdQA():r.a==='plan'?vProdPlan():vProdOverview(),cal:vCal,docs:()=>vDocs(r.a),report:vReport,me:vMe,update:vUpdate};
-  const v=document.getElementById('view');v.innerHTML=(map[r.v]||map.open)();
+  const v=document.getElementById('view');v.innerHTML=(map[r.v]||map.open)();ownerDecorate(r);saveBar();
   v.style.animation='none';void v.offsetWidth;v.style.animation='';
   document.documentElement.lang=lang==='zh'?'zh-Hant':lang;document.body.classList.remove('menu');
 }
