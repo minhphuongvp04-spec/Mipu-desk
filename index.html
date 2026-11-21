@@ -385,6 +385,16 @@ svg.i{stroke-width:1.75}
 .stp.done .dot{background:var(--brand);border-color:var(--brand)}
 .stp.done::before{background:var(--brand)}
 .fact.wide{grid-column:1/-1}
+.upf{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 14px;align-items:end}
+.upf label{display:flex;flex-direction:column;gap:5px;font-size:12px;color:var(--muted);font-weight:500}
+.upf label.wide{grid-column:span 2}
+.upf input,.upf select{font:inherit;font-size:14px;color:var(--ink);border:0;border-radius:12px;padding:8px 10px;background:rgba(118,118,128,.07);min-width:0}
+.upf input[type=file]{padding:7px}
+.upact{display:flex;gap:10px;align-items:center}
+.upcard h3 svg{width:18px;height:18px;color:var(--brand-deep)}
+.docdel{position:static;opacity:.5;margin-left:4px}
+.doc:hover .docdel{opacity:1}
+@media (max-width:700px){.upf{grid-template-columns:1fr}.upf label.wide{grid-column:auto}}
 .ititle .lotb{border-radius:999px}
 @media (max-width:900px){.side{background:rgba(255,255,255,.92)}.topbar{margin-top:-14px}.bnav{background:rgba(255,255,255,.8);-webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%)}}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -463,9 +473,9 @@ svg.i{stroke-width:1.75}
 </div>
 <script>
 (()=>{
-const META={"salt":"CixIOfU8Zkioe1mWVxT9NA==","iter":310000,"v":"20261120165207","repo":"minhphuongvp04-spec/Mipu-desk"};
+const META={"salt":"CixIOfU8Zkioe1mWVxT9NA==","iter":310000,"v":"20261121082549","repo":"minhphuongvp04-spec/Mipu-desk"};
 const b64=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
-const tob64=u=>{let s='';u.forEach(b=>s+=String.fromCharCode(b));return btoa(s)};
+const tob64=u=>{let s='';for(let i=0;i<u.length;i+=0x8000)s+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));return btoa(s)};
 const $=id=>document.getElementById(id);
 let K=null;
 async function keysFrom(bits){
@@ -511,8 +521,20 @@ window.TSMT_STORE={
     const enc=await encB(new TextEncoder().encode(text),K);
     await api('/contents/data.enc',{method:'PUT',body:JSON.stringify({message:'Web edit '+new Date().toISOString().slice(0,16).replace('T',' '),content:tob64(enc),sha:cur.sha,branch:'main'})});
     try{sessionStorage.setItem('tsmt_pending',text)}catch(e){}
+  },
+  async uploadDoc(path,bytes){
+    let sha;try{sha=(await api('/contents/'+encodeURI(path)+'.enc?ref=main')).sha}catch(e){if(!/^404/.test(e.message))throw e}
+    const enc=await encB(bytes,K);
+    await api('/contents/'+encodeURI(path)+'.enc',{method:'PUT',body:JSON.stringify(Object.assign({message:'Upload '+path.split('/').pop(),content:tob64(enc),branch:'main'},sha?{sha}:{}))});
   }
 };
+async function getDoc(path){
+  try{return await get(path)}catch(e){
+    if(!tok())throw e;
+    const r=await fetch('https://api.github.com/repos/'+META.repo+'/contents/'+encodeURI(path)+'?ref=main',{cache:'no-store',headers:{Authorization:'Bearer '+tok(),Accept:'application/vnd.github.raw','X-GitHub-Api-Version':'2022-11-28'}});
+    if(!r.ok)throw e;return r.arrayBuffer();
+  }
+}
 async function unlock(bits,remember){
   const k=await keysFrom(bits);
   const data=await dec(await get('data.enc'),k);
@@ -543,11 +565,11 @@ async function start(){
   });
 }
 document.addEventListener('click',async e=>{
-  const a=e.target.closest&&e.target.closest('a.doc');if(!a||!K)return;
+  if(e.target.closest&&e.target.closest('[data-ed]'))return;const a=e.target.closest&&e.target.closest('a.doc');if(!a||!K)return;
   e.preventDefault();
   const href=a.getAttribute('href');
   try{
-    const bytes=await dec(await get(href+'.enc'),K);
+    const bytes=await dec(await getDoc(href+'.enc'),K);
     const u=URL.createObjectURL(new Blob([bytes]));
     const l=document.createElement('a');l.href=u;l.download=decodeURIComponent(href.split('/').pop());
     document.body.appendChild(l);l.click();l.remove();setTimeout(()=>URL.revokeObjectURL(u),10000);
@@ -1000,7 +1022,7 @@ function vCal(){
   `<div class="card"><h3>${t('coming')}</h3><div class="up">${list.map(e=>`<div class="day"><div class="dd ${e.d===TODAY?'today':''}"><b>${pd(e.d).getDate()}</b><span>${t('wd'+dow(e.d))}</span></div><div class="ev"><div><i style="background:${e.col}"></i>${e.href?`<a href="${e.href}">${esc(e.txt)}</a>`:esc(e.txt)}</div></div></div>`).join('')||`<div class="muted">${t('nothing')}</div>`}</div></div>`;
 }
 function docRow(d){const ext=(d.file.split('.').pop()||'').toLowerCase();const col={xlsx:'#1F7A45',xls:'#1F7A45',csv:'#1F7A45',pdf:'#C2372E',png:'#7C88A0',jpg:'#7C88A0',jpeg:'#7C88A0',webp:'#7C88A0',docx:'#2F6FD6',pptx:'#D9822B'}[ext]||'#7C88A0';
-  return `<a class="doc" href="${esc(d.file)}" target="_blank" rel="noopener"><div class="fi" style="background:${col}">${esc(ext.toUpperCase().slice(0,4))}</div><div style="min-width:0"><div class="nm">${esc(d.title)}</div><div class="sz">${fd(d.date)}${d.size?' · '+fmtSize(d.size):''}</div></div><div class="open chips">${pchip(d.project)}<span class="chip blue">${ic('i-ext')}${t('open_file')}</span></div></a>`}
+  return `<a class="doc" data-docid="${esc(d.id)}" href="${esc(d.file)}" target="_blank" rel="noopener"><div class="fi" style="background:${col}">${esc(ext.toUpperCase().slice(0,4))}</div><div style="min-width:0"><div class="nm">${esc(d.title)}</div><div class="sz">${fd(d.date)}${d.size?' · '+fmtSize(d.size):''}</div></div><div class="open chips">${pchip(d.project)}<span class="chip blue">${ic('i-ext')}${t('open_file')}</span></div></a>`}
 function vDocs(c){c=c||'all';const l=D.docs.filter(d=>c==='all'||d.cat===c).sort((a,b)=>b.date.localeCompare(a.date));
   return `<div class="ph"><div><h2>${t('docs_title')}</h2><p>${t('sub_'+c)}</p></div></div><div class="card">${l.length?l.map(docRow).join(''):empty(t('docs_none'))}</div>`}
 function vReport(){
@@ -1093,6 +1115,8 @@ function ownerDecorate(r){
   const nb=(type,lab)=>`<button class="btn pri sm" data-ed="new" data-type="${type}">${ic('i-edit')}${t(lab)}</button>`;
   if(r.v==='open'){const h=v.querySelector('.tabs');const c=h&&h.closest('.card');if(c)c.querySelector('h3').insertAdjacentHTML('beforeend',nb('issue','ed_new_issue'))}
   if(r.v==='ship'||r.v==='out'){const ph=v.querySelector('.ph');if(ph)ph.insertAdjacentHTML('beforeend',`<div class="right">${nb(r.v==='ship'?'shipment':'outbound',r.v==='ship'?'ed_new_ship':'ed_new_out')}</div>`)}
+  if(r.v==='docs'){const ph=v.querySelector('.ph');if(ph)ph.insertAdjacentHTML('afterend',docUploadCard(r.a&&r.a!=='all'?r.a:'minutes'));
+    v.querySelectorAll('a.doc[data-docid]').forEach(a=>a.querySelector('.open').insertAdjacentHTML('beforeend',`<button class="xdel docdel" title="${esc(t('ed_delete'))}" data-ed="deldoc" data-id="${a.dataset.docid}">×</button>`))}
   const type={issue:'issue',shipment:'shipment',outbound:'outbound'}[r.v];if(!type)return;
   const it=findItem(type,r.a);if(!it)return;
   const dh=v.querySelector('.dhead > div:last-child');if(dh)dh.insertAdjacentHTML('beforeend',`<button class="btn" data-ed="edit" data-type="${type}" data-id="${it.id}">${ic('i-edit')}${t('ed_edit')}</button>`);
@@ -1104,6 +1128,28 @@ function ownerDecorate(r){
     v.querySelectorAll('.blocker[data-bi]').forEach(el=>{const bi=+el.dataset.bi;const b=it.blockers[bi];el.insertAdjacentHTML('beforeend',`<div class="bact"><button class="btn sm" data-ed="blk" data-id="${it.id}" data-bi="${bi}">${b.done?t('ed_reopen'):t('ed_resolve')}</button><button class="xdel" data-ed="delblk" data-id="${it.id}" data-bi="${bi}">×</button></div>`)});
     const first=v.querySelector('.cols2 .stack > .card');if(first)first.insertAdjacentHTML('afterend',`<form class="blkf" data-id="${it.id}"><select name="group">${BGROUPS.map(g=>`<option value="${g}">${esc(t('b_'+g))}</option>`).join('')}</select><input type="text" name="detail" placeholder="${esc(t('ed_blk_ph'))}" required><button class="btn">${t('ed_add_blk')}</button></form>`);
   }
+}
+Object.assign(L.en,{up_doc:'Upload a file',up_doc_txt:'The file is encrypted in your browser before it goes online. Only people with the site password can open it.',up_file:'File',up_cat:'Folder',up_title:'Title',up_date:'Date',up_btn:'Upload',up_busy:'Encrypting and uploading…',up_done:'Uploaded. It can be opened in about 1–2 minutes.',up_err:'Upload failed: {e}',up_big:'This file is over 25 MB. Please send it to Claude instead.',up_local:'Uploading works on the online site after the GitHub token is set (Update data page).',up_del:'Remove this file from Documents?'});
+Object.assign(L.vi,{up_doc:'Tải file lên',up_doc_txt:'File được mã hóa ngay trong trình duyệt trước khi đưa lên mạng. Chỉ ai có mật khẩu web mới mở được.',up_file:'File',up_cat:'Thư mục',up_title:'Tên hiển thị',up_date:'Ngày',up_btn:'Tải lên',up_busy:'Đang mã hóa và tải lên…',up_done:'Đã tải lên. Khoảng 1–2 phút nữa là mở được.',up_err:'Tải lên không được: {e}',up_big:'File lớn hơn 25 MB. Bạn gửi cho Claude giúp nhé.',up_local:'Tải file lên dùng được trên web online sau khi đã cài GitHub token (trang Cập nhật dữ liệu).',up_del:'Gỡ file này khỏi mục Tài liệu?'});
+const DOCCATS=['minutes','dpr','qareport','po','other'];
+const safeName=n=>n.normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').replace(/[^\w.\-]+/g,'_').replace(/_+/g,'_').replace(/^_|_$/g,'');
+function docUploadCard(cur){
+  const ok=window.TSMT_STORE&&TSMT_STORE.hasToken();
+  return `<div class="card upcard"><h3>${ic('i-folder')}${t('up_doc')}</h3>${ok?`<form class="upf"><label class="wide">${t('up_file')}<input type="file" name="file" required></label><label>${t('up_cat')}<select name="cat">${DOCCATS.map(c=>`<option value="${c}" ${c===cur?'selected':''}>${esc(t('sub_'+c))}</option>`).join('')}</select></label><label>${t('f_project')}<select name="project"><option value="">—</option>${PROJVALS().map(x=>`<option>${esc(x)}</option>`).join('')}</select></label><label class="wide">${t('up_title')}<input type="text" name="title" placeholder="${esc(t('up_title'))}"></label><label>${t('up_date')}<input type="date" name="date" value="${TODAY}"></label><div class="upact"><button class="btn pri">${t('up_btn')}</button><span class="muted upst"></span></div></form><p class="muted" style="font-size:12.5px;margin-top:10px">${t('up_doc_txt')}</p>`:`<p class="muted">${t('up_local')}</p>`}</div>`;
+}
+async function uploadDoc(f){
+  const st=f.querySelector('.upst');const file=f.file.files[0];if(!file)return;
+  if(file.size>25*1024*1024){st.textContent=t('up_big');return}
+  const btn=f.querySelector('button');btn.disabled=true;st.textContent=t('up_busy');
+  try{
+    const date=f.date.value||TODAY;const path='docs/'+date+'_'+safeName(file.name);
+    await TSMT_STORE.uploadDoc(path,new Uint8Array(await file.arrayBuffer()));
+    D.docs=D.docs||[];const old=D.docs.find(d=>d.file===path);
+    const entry={id:'doc-'+Date.now().toString(36),title:f.title.value.trim()||file.name.replace(/\.[^.]+$/,''),cat:f.cat.value,project:f.project.value,date,file:path,size:file.size};
+    if(old)Object.assign(old,entry,{id:old.id});else D.docs.push(entry);
+    ED.dirty++;D.updated=TODAY;await publish();
+    if(!ED.dirty)ED.msg=t('up_done');saveBar();
+  }catch(e){st.textContent=t('up_err',{e:e.message});btn.disabled=false}
 }
 function vSetup(){
   const S_=window.TSMT_STORE;
@@ -1124,12 +1170,14 @@ document.addEventListener('click',e=>{
   else if(a==='discard'){ED.dirty=0;location.reload()}
   else if(a==='hidemsg'){ED.msg='';saveBar()}
   else if(a==='tokrm'){TSMT_STORE.clear();render()}
+  else if(a==='deldoc'){e.preventDefault();e.stopPropagation();if(!confirm(t('up_del')))return;D.docs=D.docs.filter(d=>d.id!==id);touch()}
 });
 document.addEventListener('submit',async e=>{
   const f=e.target;if(!OWNER)return;
   if(f.classList.contains('edf')){if(e.submitter&&e.submitter.value!=='ok')return;const miss=[...f.querySelectorAll('[required]')].filter(x=>!x.value.trim());if(miss.length){e.preventDefault();alert(t('ed_req',{f:miss.map(x=>x.closest('label').firstChild.textContent).join(', ')}));return}applyForm(f);return}
   if(f.classList.contains('logf')){e.preventDefault();const it=findItem(f.dataset.type,f.dataset.id);(it.log=it.log||[]).push({d:f.d.value||TODAY,text:f.text.value.trim()});touch();return}
   if(f.classList.contains('blkf')){e.preventDefault();const it=findItem('shipment',f.dataset.id);(it.blockers=it.blockers||[]).push({group:f.group.value,detail:f.detail.value.trim(),done:false,since:TODAY});touch();return}
+  if(f.classList.contains('upf')){e.preventDefault();uploadDoc(f);return}
   if(f.classList.contains('tokf')){e.preventDefault();const v=f.tok.value.trim();if(!v)return;const el=document.getElementById('tokst');el.textContent=t('ed_testing');try{await TSMT_STORE.setToken(v);el.textContent=t('ed_token_ok');setTimeout(render,1200)}catch(err){el.textContent=t('ed_token_bad',{e:err.message})}}
 });
 window.addEventListener('beforeunload',e=>{if(OWNER&&ED.dirty){e.preventDefault();e.returnValue=t('ed_leave')}});
